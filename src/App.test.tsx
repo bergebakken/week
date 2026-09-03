@@ -97,6 +97,19 @@ describe('the app', () => {
     expect(host.textContent).toContain('swim')
   })
 
+  it('keeps a short block readable rather than clipping its title', async () => {
+    await render()
+    // No end time, so it gets the default 30 minutes and lands on the height floor.
+    const area = await type('monday standup at 9')
+    await act(async () => { area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })) })
+
+    const blk = host.querySelector('.blk:not(.ghost)')
+    expect(blk?.className).toContain('compact')
+    expect(blk?.textContent).toContain('standup')
+    expect(blk?.textContent).toContain('09:00')
+    expect(blk?.getAttribute('title')).toContain('09:00–09:30')
+  })
+
   it('shows a gap marker between two distant blocks', async () => {
     await render()
     const area = await type('monday swim 1h at 9\nmonday gym 1h at 17')

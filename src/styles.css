@@ -94,12 +94,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--tint); border: 1px solid var(--edge);
 }
 .blk:hover { border-color: var(--ink); }
-.blk.short { padding-top: 5px; }
 .blk.ghost { background: color-mix(in srgb, var(--tint) 50%, transparent); border-style: dashed; opacity: 0.75; }
 .blk.clash { box-shadow: inset 2px 0 0 var(--accent); }
 
 .blk-time { font-family: var(--mono); font-size: 10px; letter-spacing: 0.045em; color: var(--ink); font-variant-numeric: tabular-nums; }
-.blk-title { font-size: 13px; font-weight: 500; line-height: 1.22; color: var(--text-2); text-wrap: pretty; }
+.blk-title {
+  font-size: 13px; font-weight: 500; line-height: 1.22; color: var(--text-2);
+  display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+}
+
+/* Too short to stack, so the time and the title share one row. */
+.blk.compact { flex-direction: row; align-items: center; gap: 7px; padding: 6px 9px; }
+.blk.compact .blk-time { flex: 0 0 auto; }
+.blk.compact .blk-title-row { flex: 1 1 auto; min-width: 0; }
+.blk.compact .blk-title { display: block; white-space: nowrap; text-overflow: ellipsis; }
 .blk-note { font-size: 11px; line-height: 1.32; color: var(--dim); text-wrap: pretty; }
 .blk-title-row { display: flex; align-items: flex-start; gap: 6px; }
 

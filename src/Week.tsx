@@ -1,4 +1,4 @@
-import { layoutDay } from './layout'
+import { fitBlock, layoutDay } from './layout'
 import { Check } from './Icons'
 import {
   DAY_NAMES, blocksForDay, committedMinutes, fmtClock, fmtDuration,
@@ -84,9 +84,10 @@ function DayColumn({ name, blocks, ghosts, committed, isToday, now, onSelect, is
         const { block, height, overlapsPrevious } = row
         const isGhost = block.id.startsWith(GHOST_PREFIX)
         const showsNow = isToday && !isGhost && now >= block.start && now < block.end
+        const fit = fitBlock(height)
         const className = [
           'blk',
-          height <= 34 ? 'short' : '',
+          fit.compact ? 'compact' : '',
           isGhost ? 'ghost' : '',
           overlapsPrevious ? 'clash' : '',
         ].filter(Boolean).join(' ')
@@ -99,14 +100,19 @@ function DayColumn({ name, blocks, ghosts, committed, isToday, now, onSelect, is
             style={{ height }}
             disabled={isGhost}
             onClick={() => onSelect(block)}
-            title={overlapsPrevious ? 'Overlaps the block before it' : undefined}
+            title={[
+              `${fmtClock(block.start)}–${fmtClock(block.end)} · ${block.title}`,
+              block.note,
+              overlapsPrevious ? 'Overlaps the block before it' : undefined,
+            ].filter(Boolean).join('\n')}
           >
-            <span className="blk-time">{timeLabel(block)}</span>
+            {/* A compact block drops the duration to leave room for the title. */}
+            <span className="blk-time">{fit.compact ? fmtClock(block.start) : timeLabel(block)}</span>
             <span className="blk-title-row">
               {block.todoId && <Check done={isTodoDone(block.todoId)} color="var(--ink)" size={12} />}
-              <span className="blk-title">{block.title}</span>
+              <span className="blk-title" style={{ WebkitLineClamp: fit.titleLines }}>{block.title}</span>
             </span>
-            {block.note && height >= 60 && <span className="blk-note">{block.note}</span>}
+            {block.note && fit.showNote && <span className="blk-note">{block.note}</span>}
             {showsNow && (
               <span className="now" style={{ top: `${((now - block.start) / (block.end - block.start)) * 100}%` }}>
                 <b />

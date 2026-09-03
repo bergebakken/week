@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GAP_THRESHOLD, MIN_BLOCK_HEIGHT, blockHeight, layoutDay } from './layout'
+import { GAP_THRESHOLD, MIN_BLOCK_HEIGHT, blockHeight, fitBlock, layoutDay } from './layout'
 import type { Block, Category } from './model'
 
 let n = 0
@@ -47,5 +47,38 @@ describe('gap-collapsed layout', () => {
     // A long block swallowing a short one must not produce a phantom gap.
     const rows = layoutDay([block(480, 720, 'school'), block(540, 570, 'call'), block(780, 840, 'lunch')])
     expect(shape(rows)).toEqual(['school', 'call', 'gap 60m', 'lunch'])
+  })
+})
+
+describe('fitting text to a block', () => {
+  it('goes compact when a stacked title would be cut off', () => {
+    expect(fitBlock(blockHeight(block(600, 615)))).toMatchObject({ compact: true })  // 15m
+    expect(fitBlock(blockHeight(block(660, 690)))).toMatchObject({ compact: true })  // 30m
+    expect(fitBlock(blockHeight(block(660, 705)))).toMatchObject({ compact: true })  // 45m
+  })
+
+  it('stacks from an hour up', () => {
+    expect(fitBlock(blockHeight(block(540, 600)))).toMatchObject({ compact: false, titleLines: 1 })
+  })
+
+  it('never lets a title run past two lines', () => {
+    expect(fitBlock(blockHeight(block(480, 720))).titleLines).toBe(2)   // 4h
+    expect(fitBlock(1000).titleLines).toBe(2)
+  })
+
+  it('only shows a note when there is room left after the title', () => {
+    expect(fitBlock(blockHeight(block(540, 600))).showNote).toBe(false) // 1h
+    expect(fitBlock(blockHeight(block(480, 600))).showNote).toBe(true)  // 2h
+  })
+
+  it('leaves every part inside the box it was given', () => {
+    for (let minutes = 5; minutes <= 300; minutes += 5) {
+      const height = blockHeight(block(0, minutes))
+      const fit = fitBlock(height)
+      const used = fit.compact
+        ? 13 + 16
+        : 13 + 13 + 2 + fit.titleLines * 16 + (fit.showNote ? 2 + 15 : 0)
+      expect(used, `${minutes}m in ${height}px`).toBeLessThanOrEqual(height)
+    }
   })
 })

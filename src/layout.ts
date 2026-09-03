@@ -35,3 +35,39 @@ export function layoutDay(blocks: Block[]): Row[] {
 
   return rows
 }
+
+/* --- fitting text into a block whose height is fixed by its duration --- */
+
+/** Measured against the stylesheet: padding, and the line box of each part. */
+const PAD_Y = 13
+const TIME_LINE = 13
+const TITLE_LINE = 16
+const NOTE_LINE = 15
+const GAP = 2
+/** A title is never allowed to run longer than this; it is clamped instead. */
+const MAX_TITLE_LINES = 2
+
+export interface BlockFit {
+  /** Too short to stack: the time and title share one row. */
+  compact: boolean
+  titleLines: number
+  showNote: boolean
+}
+
+/**
+ * Works out what actually fits in a block of this height, so nothing is ever
+ * silently clipped. Priority is time, then title, then note.
+ */
+export function fitBlock(height: number): BlockFit {
+  const inner = height - PAD_Y
+  const stacked = TIME_LINE + GAP + TITLE_LINE
+
+  if (inner < stacked) return { compact: true, titleLines: 1, showNote: false }
+
+  const titleLines = Math.max(1, Math.min(MAX_TITLE_LINES, Math.floor((inner - TIME_LINE - GAP) / TITLE_LINE)))
+  // Budget for the title at its full allowance, so a wrapped title cannot push
+  // the note out of the box.
+  const used = TIME_LINE + GAP + titleLines * TITLE_LINE
+  const showNote = inner - used >= GAP + NOTE_LINE
+  return { compact: false, titleLines, showNote }
+}
