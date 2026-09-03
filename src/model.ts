@@ -69,3 +69,12 @@ export function blocksForDay(plan: Plan, day: Day): Block[] {
 export function committedMinutes(plan: Plan, day: Day): number {
   return blocksForDay(plan, day).reduce((sum, b) => sum + (b.end - b.start), 0)
 }
+
+/** ISO-8601 week number: weeks start Monday, week 1 holds the first Thursday. */
+export function isoWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const weekday = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - weekday)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7)
+}

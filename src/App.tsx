@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Clock } from './Clock'
 import { BlockDetail, NewWeekDialog } from './Dialogs'
 import { PromptBar } from './PromptBar'
 import { TodoRail } from './TodoRail'
@@ -58,7 +59,10 @@ export default function App() {
             {planned > 0 ? `${fmtDuration(planned).toUpperCase()} PLANNED` : 'NOTHING PLANNED YET'}
           </span>
         </div>
-        <button className="ghost-btn" onClick={() => setConfirming(true)}>New week</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <Clock />
+          <button className="ghost-btn" onClick={() => setConfirming(true)}>New week</button>
+        </div>
       </header>
 
       <div className="body">

@@ -173,6 +173,43 @@ describe('a day named later in the line', () => {
   })
 })
 
+describe('one line, many days', () => {
+  const daysOf = (input: string, day: Day = 0) => parse(input, { day }).blocks.map((b) => b.day)
+
+  it('spreads "everyday except sunday" across the other six', () => {
+    const r = parse('wake up everyday except sunday at 8')
+    expect(r.blocks.map((b) => b.day)).toEqual([0, 1, 2, 3, 4, 5])
+    expect(r.blocks[0]).toMatchObject({ title: 'wake up', start: 8 * 60, end: 8 * 60 + 30 })
+    expect(new Set(r.blocks.map((b) => `${b.start}-${b.end}-${b.title}`)).size).toBe(1)
+  })
+
+  it('reads a list', () => {
+    expect(daysOf('school 8-11 on mon, wed and fri')).toEqual([0, 2, 4])
+  })
+
+  it('reads a range', () => {
+    expect(daysOf('swim 1h at 9 mon-fri')).toEqual([0, 1, 2, 3, 4])
+  })
+
+  it('reads weekdays and weekends', () => {
+    expect(daysOf('gym 1h at 17 on weekdays')).toEqual([0, 1, 2, 3, 4])
+    expect(daysOf('long ride 4h from 9 on weekends')).toEqual([5, 6])
+  })
+
+  it('subtracts a group, not just a single day', () => {
+    expect(daysOf('breakfast 30 min at 8 every day except weekends')).toEqual([0, 1, 2, 3, 4])
+  })
+
+  it('carries the set through a chained "then"', () => {
+    const r = parse('every day wake up at 7 then breakfast 30 min')
+    expect(r.blocks.filter((b) => b.title === 'breakfast')).toHaveLength(7)
+  })
+
+  it('leaves a single-day line alone', () => {
+    expect(daysOf('gym 1h at 17', 3)).toEqual([3])
+  })
+})
+
 describe('what it refuses, so Claude gets asked instead', () => {
   it('gives up on vague input rather than guessing', () => {
     const r = parse('gym sometime after lunch')

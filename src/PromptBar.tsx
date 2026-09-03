@@ -58,12 +58,17 @@ export function PromptBar({ day, onPreview, onCommit }: Props) {
           <div className="readout">
             {result.segments.map((s, i) => (
               <div key={i}>
-                {s.kind === 'block' && (
-                  <span className="res" style={{ color: INK[s.block.category] }}>
-                    → {fmtClock(s.block.start)}–{fmtClock(s.block.end)}&nbsp;&nbsp;{s.block.title}
+                {s.kind === 'block' && s.blocks[0] && (
+                  <span className="res" style={{ color: INK[s.blocks[0].category] }}>
+                    → {fmtClock(s.blocks[0].start)}–{fmtClock(s.blocks[0].end)}&nbsp;&nbsp;{s.blocks[0].title}
+                    {s.blocks.length > 1 && ` · ${s.blocks.length} days`}
                   </span>
                 )}
-                {s.kind === 'day' && <span className="res" style={{ color: 'var(--fainter)' }}>day set</span>}
+                {s.kind === 'day' && (
+                  <span className="res" style={{ color: 'var(--fainter)' }}>
+                    {s.days.length > 1 ? `${s.days.length} days set` : 'day set'}
+                  </span>
+                )}
                 {s.kind === 'todo' && <span className="res" style={{ color: INK.admin }}>→ todo</span>}
                 {s.kind === 'unparsed' && (
                   <span className="res" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 7 }}>

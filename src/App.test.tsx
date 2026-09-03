@@ -97,6 +97,14 @@ describe('the app', () => {
     expect(host.textContent).toContain('swim')
   })
 
+  it('shows the clock, the date and the week number', async () => {
+    await render()
+    expect(host.querySelector('.clock-time')?.textContent).toMatch(/^\d{2}:\d{2}$/)
+    expect(host.querySelector('.clock-week')?.textContent).toMatch(/^Week ([1-9]|[1-4]\d|5[0-3])$/)
+    expect(host.querySelector('.clock-date')?.textContent).toBeTruthy()
+    expect(host.querySelectorAll('.clock svg circle')).toHaveLength(2)
+  })
+
   it('keeps a short block readable rather than clipping its title', async () => {
     await render()
     // No end time, so it gets the default 30 minutes and lands on the height floor.

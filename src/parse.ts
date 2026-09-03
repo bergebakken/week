@@ -13,8 +13,8 @@ export interface DraftBlock {
 }
 
 export type ParsedSegment =
-  | { kind: 'day'; raw: string; day: Day }
-  | { kind: 'block'; raw: string; block: DraftBlock }
+  | { kind: 'day'; raw: string; days: Day[] }
+  | { kind: 'block'; raw: string; blocks: DraftBlock[] }
   | { kind: 'todo'; raw: string; text: string; note?: string }
   | { kind: 'unparsed'; raw: string; reason: string }
 
@@ -24,8 +24,8 @@ export interface ParseResult {
   /** Todos with no time attached; they live in the rail until scheduled. */
   todos: { text: string; note?: string }[]
   unparsed: { raw: string; reason: string }[]
-  /** Day the next line would land on, so the caller can show it. */
-  day: Day
+  /** Days the next line would land on, so the caller can show it. */
+  days: Day[]
 }
 
 /** A start time with no stated length gets this many minutes. */
@@ -37,8 +37,125 @@ const DAY_WORDS: Record<string, Day> = {
   wednesday: 2, wed: 2, onsdag: 2, ons: 2,
   thursday: 3, thu: 3, thur: 3, thurs: 3, torsdag: 3, tor: 3,
   friday: 4, fri: 4, fredag: 4, fre: 4,
-  saturday: 5, sat: 5, lordag: 5, 'lørdag': 5, lor: 5,
-  sunday: 6, sun: 6, sondag: 6, 'søndag': 6, son: 6,
+  saturday: 5, sat: 5, lordag: 5, 'l\u00f8rdag': 5, lor: 5,
+  sunday: 6, sun: 6, sondag: 6, 's\u00f8ndag': 6, son: 6,
+}
+
+const ALL_DAYS: Day[] = [0, 1, 2, 3, 4, 5, 6]
+
+/** Longest first, so "monday" wins over "mon". */
+const ANY_DAY = Object.keys(DAY_WORDS).sort((a, b) => b.length - a.length).join('|')
+/**
+ * Full names are safe to spot anywhere in a line. Abbreviations are not -
+ * "call my son" must not become Sunday - so those need an anchor.
+ */
+const FULL_DAY = Object.keys(DAY_WORDS)
+  .filter((w) => w.length > 4)
+  .sort((a, b) => b.length - a.length)
+  .join('|')
+
+const CONTINUATION = String.raw`(?:\s*(?:,|and|og|&|\+|\/)\s*(?:${ANY_DAY}))*`
+
+const DAY_GROUPS: [RegExp, Day[]][] = [
+  [/\b(?:every\s?day|everyday|daily|each\s+day|all\s+days|hver\s+dag|alle\s+dager)\b/i, ALL_DAYS],
+  [/\b(?:weekdays?|hverdager|ukedager)\b/i, [0, 1, 2, 3, 4]],
+  [/\b(?:weekends?|helgen|helga|helg)\b/i, [5, 6]],
+]
+
+const EXCEPT = new RegExp(
+  String.raw`\b(?:except(?:\s+for)?|excluding|but\s+not|apart\s+from|unntatt|bortsett\s+fra|ikke)\s+` +
+  String.raw`((?:${ANY_DAY})${CONTINUATION}|weekends?|weekdays?|helgen|helga|helg|hverdager)\b`, 'i')
+
+const DAY_RANGE = new RegExp(
+  String.raw`\b(${ANY_DAY})\s*(?:-|\u2013|\u2014|to|til|through|thru)\s*(${ANY_DAY})\b`, 'i')
+
+/** A day list that either opens the segment or follows "on" / "every". */
+const DAY_LIST_ANCHORED = new RegExp(
+  String.raw`(?:^|\b(?:on|every|each|hver|p\u00e5)\s+)((?:${ANY_DAY})${CONTINUATION})\b`, 'i')
+/** A full day name anywhere: "eat dinner 18 friday". */
+const DAY_LIST_ANYWHERE = new RegExp(String.raw`\b((?:${FULL_DAY})${CONTINUATION})\b`, 'i')
+
+function daysIn(spec: string): Day[] {
+  const found: Day[] = []
+  for (const m of spec.matchAll(new RegExp(String.raw`\b(?:${ANY_DAY})\b`, 'gi'))) {
+    const day = DAY_WORDS[m[0].toLowerCase()]
+    if (day !== undefined && !found.includes(day)) found.push(day)
+  }
+  return found
+}
+
+function daySpan(from: Day, to: Day): Day[] {
+  const out: Day[] = []
+  let day = from
+  for (let i = 0; i < 7; i++) {
+    out.push(day)
+    if (day === to) break
+    day = (((day as number) + 1) % 7) as Day
+  }
+  return out
+}
+
+function groupIn(spec: string): Day[] | null {
+  for (const [pattern, days] of DAY_GROUPS) if (pattern.test(spec)) return days
+  const listed = daysIn(spec)
+  return listed.length ? listed : null
+}
+
+function cut(text: string, at: number, length: number): string {
+  return tidy(`${text.slice(0, at)} ${text.slice(at + length)}`)
+}
+
+/**
+ * Pulls every day the segment names out of the text: a single day, a list, a
+ * range, "every day", "weekdays", and an "except ..." exclusion.
+ */
+export function extractDays(input: string): { days: Day[] | null; rest: string } {
+  let text = input
+  let excluded: Day[] = []
+
+  // Taken first, or "except sunday" would be read as an ordinary mention of Sunday.
+  const skip = EXCEPT.exec(text)
+  if (skip?.[1]) {
+    excluded = groupIn(skip[1]) ?? []
+    text = cut(text, skip.index, skip[0].length)
+  }
+
+  let base: Day[] | null = null
+
+  for (const [pattern, days] of DAY_GROUPS) {
+    const found = pattern.exec(text)
+    if (found) { base = days; text = cut(text, found.index, found[0].length); break }
+  }
+
+  if (!base) {
+    const span = DAY_RANGE.exec(text)
+    const from = span?.[1] === undefined ? undefined : DAY_WORDS[span[1].toLowerCase()]
+    const to = span?.[2] === undefined ? undefined : DAY_WORDS[span[2].toLowerCase()]
+    if (span && from !== undefined && to !== undefined) {
+      base = daySpan(from, to)
+      text = cut(text, span.index, span[0].length)
+    }
+  }
+
+  if (!base) {
+    for (const pattern of [DAY_LIST_ANCHORED, DAY_LIST_ANYWHERE]) {
+      const found = pattern.exec(text)
+      if (found?.[1]) {
+        const listed = daysIn(found[1])
+        if (listed.length) {
+          base = listed
+          // Keep any "on"/"every" lead-in out of the title too.
+          text = cut(text, found.index, found[0].length)
+          break
+        }
+      }
+    }
+  }
+
+  if (!base && !excluded.length) return { days: null, rest: text }
+
+  const days = (base ?? ALL_DAYS).filter((d) => !excluded.includes(d))
+  return { days: days.length ? days : (base ?? ALL_DAYS), rest: text }
 }
 
 const CATEGORIES: [Category, RegExp][] = [
@@ -131,7 +248,7 @@ function readDuration(value: string, unitIsHours: boolean, extraMinutes?: string
 }
 
 interface SegmentContext {
-  day: Day
+  days: Day[]
   /** End of the previous block on this day, so "then ..." knows where to start. */
   cursor: number | null
   chained: boolean
@@ -139,52 +256,24 @@ interface SegmentContext {
   forceTodo: boolean
 }
 
-/** Full day names only. Abbreviations are too easy to hit by accident ("my son"). */
-const DAY_NAME_PATTERN =
-  'monday|tuesday|wednesday|thursday|friday|saturday|sunday|' +
-  'mandag|tirsdag|onsdag|torsdag|fredag|l\u00f8rdag|lordag|s\u00f8ndag|sondag'
-const ANY_DAY_PATTERN = Object.keys(DAY_WORDS).join('|')
-/** "on friday" is unambiguous, so abbreviations are safe here. */
-const ON_DAY = new RegExp(String.raw`\b(?:on|p\u00e5)\s+(${ANY_DAY_PATTERN})\b`, 'i')
-/** A day name at the very end: "eat dinner 18 friday". */
-const TRAILING_DAY = new RegExp(String.raw`[\s,]+(${DAY_NAME_PATTERN})\s*$`, 'i')
 
 function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   let text = raw.trim()
   if (!text) return { kind: 'unparsed', raw, reason: 'empty' }
-
-  // A leading day name retargets the following lines: "Monday, 8 bike ride".
-  const dayMatch = /^([a-zæøå]+)\s*[,:.]?\s*/i.exec(text)
-  if (dayMatch?.[1]) {
-    const day = DAY_WORDS[dayMatch[1].toLowerCase()]
-    if (day !== undefined) {
-      const rest = text.slice(dayMatch[0].length).trim()
-      if (!rest) return { kind: 'day', raw, day }
-      ctx.day = day
-      ctx.cursor = null
-      ctx.chained = false
-      text = rest
-    }
-  }
 
   // "afterwards" anywhere means: start where the previous block ended.
   let chained = ctx.chained
   const withoutMarker = text.replace(/\b(?:afterwards?|after\s+that|etterp\u00e5|etter\s+det)\b/gi, ' ')
   if (withoutMarker !== text) { chained = true; text = withoutMarker }
 
-  // A day named later in the line wins over the day we were carrying.
-  if (dayMatch?.[1] === undefined || DAY_WORDS[dayMatch[1].toLowerCase()] === undefined) {
-    for (const pattern of [ON_DAY, TRAILING_DAY]) {
-      const found = pattern.exec(text)
-      const named = found?.[1] === undefined ? undefined : DAY_WORDS[found[1].toLowerCase()]
-      if (found && named !== undefined) {
-        ctx.day = named
-        ctx.cursor = null
-        chained = false
-        text = tidy(text.slice(0, found.index) + ' ' + text.slice(found.index + found[0].length))
-        break
-      }
-    }
+  // Which days this lands on: one, a list, a range, "every day", less any "except".
+  const named = extractDays(text)
+  if (named.days) {
+    ctx.days = named.days
+    ctx.cursor = null
+    chained = false
+    text = named.rest
+    if (!text) return { kind: 'day', raw, days: ctx.days }
   }
 
   // #todo anywhere on the line marks it as a task.
@@ -285,10 +374,14 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   const title = tidy(sc.remainder())
   if (!title) return { kind: 'unparsed', raw, reason: 'no title' }
 
+  const from = start
+  const to = end
+  const category = categorise(title)
+
   return {
     kind: 'block',
     raw,
-    block: { day: ctx.day, start, end, title, note, category: categorise(title), isTodo },
+    blocks: ctx.days.map((day) => ({ day, start: from, end: to, title, note, category, isTodo })),
   }
 }
 
@@ -299,8 +392,9 @@ const SEPARATOR = /(?:,\s*)?\b(?:then|and\s+then|så|deretter)\b\s*/gi
 const TODO_TAG = /#(?:todo|task|oppgave)\b/gi
 
 export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
-  const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], day: opts.day ?? 0 }
-  const ctx: SegmentContext = { day: opts.day ?? 0, cursor: null, chained: false, forceTodo: false }
+  const start: Day = opts.day ?? 0
+  const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], days: [start] }
+  const ctx: SegmentContext = { days: [start], cursor: null, chained: false, forceTodo: false }
 
   for (const line of input.split(/\r?\n/)) {
     if (!line.trim()) continue
@@ -325,11 +419,11 @@ export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
       result.segments.push(seg)
 
       if (seg.kind === 'day') {
-        ctx.day = seg.day
+        ctx.days = seg.days
         ctx.cursor = null
       } else if (seg.kind === 'block') {
-        result.blocks.push(seg.block)
-        ctx.cursor = seg.block.end
+        result.blocks.push(...seg.blocks)
+        ctx.cursor = seg.blocks[0]?.end ?? null
       } else if (seg.kind === 'todo') {
         result.todos.push({ text: seg.text, note: seg.note })
       } else {
@@ -339,6 +433,6 @@ export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
     }
   }
 
-  result.day = ctx.day
+  result.days = ctx.days
   return result
 }
