@@ -136,6 +136,43 @@ describe('sentences rather than shorthand', () => {
   })
 })
 
+describe('#todo splits the line', () => {
+  it('keeps whatever came before the tag out of the task', () => {
+    const r = parse('bike ride 2h from 8 #todo call bank')
+    expect(r.blocks).toHaveLength(1)
+    expect(r.blocks[0]).toMatchObject({ title: 'bike ride', isTodo: false })
+    expect(r.todos).toEqual([{ text: 'call bank', note: undefined }])
+  })
+
+  it('still schedules a tagged task that carries a time', () => {
+    expect(at('#todo send application 1h from 10')[0])
+      .toMatchObject({ title: 'send application', isTodo: true, time: '10:00-11:00' })
+  })
+
+  it('takes more than one task from a line', () => {
+    expect(parse('#todo book dentist #todo reply to Kari').todos.map((t) => t.text))
+      .toEqual(['book dentist', 'reply to Kari'])
+  })
+})
+
+describe('a day named later in the line', () => {
+  it('honours "on friday" rather than dropping it on today', () => {
+    expect(at('eat dinner 18 on friday', 3)[0]).toMatchObject({ day: 4, time: '18:00-18:30' })
+  })
+
+  it('honours a day name at the end', () => {
+    expect(at('movie night 20 saturday', 3)[0]).toMatchObject({ day: 5, time: '20:00-20:30' })
+  })
+
+  it('still falls back to today when no day is named', () => {
+    expect(at('gym 1h at 17', 3)[0]).toMatchObject({ day: 3 })
+  })
+
+  it('does not mistake an ordinary word for a day', () => {
+    expect(at('1h at 17 call my son', 3)[0]).toMatchObject({ day: 3, title: 'call my son' })
+  })
+})
+
 describe('what it refuses, so Claude gets asked instead', () => {
   it('gives up on vague input rather than guessing', () => {
     const r = parse('gym sometime after lunch')

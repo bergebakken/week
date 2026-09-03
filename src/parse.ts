@@ -135,7 +135,19 @@ interface SegmentContext {
   /** End of the previous block on this day, so "then ..." knows where to start. */
   cursor: number | null
   chained: boolean
+  /** Set when this piece of the line came after a #todo tag. */
+  forceTodo: boolean
 }
+
+/** Full day names only. Abbreviations are too easy to hit by accident ("my son"). */
+const DAY_NAME_PATTERN =
+  'monday|tuesday|wednesday|thursday|friday|saturday|sunday|' +
+  'mandag|tirsdag|onsdag|torsdag|fredag|l\u00f8rdag|lordag|s\u00f8ndag|sondag'
+const ANY_DAY_PATTERN = Object.keys(DAY_WORDS).join('|')
+/** "on friday" is unambiguous, so abbreviations are safe here. */
+const ON_DAY = new RegExp(String.raw`\b(?:on|p\u00e5)\s+(${ANY_DAY_PATTERN})\b`, 'i')
+/** A day name at the very end: "eat dinner 18 friday". */
+const TRAILING_DAY = new RegExp(String.raw`[\s,]+(${DAY_NAME_PATTERN})\s*$`, 'i')
 
 function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   let text = raw.trim()
@@ -160,8 +172,23 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   const withoutMarker = text.replace(/\b(?:afterwards?|after\s+that|etterp\u00e5|etter\s+det)\b/gi, ' ')
   if (withoutMarker !== text) { chained = true; text = withoutMarker }
 
+  // A day named later in the line wins over the day we were carrying.
+  if (dayMatch?.[1] === undefined || DAY_WORDS[dayMatch[1].toLowerCase()] === undefined) {
+    for (const pattern of [ON_DAY, TRAILING_DAY]) {
+      const found = pattern.exec(text)
+      const named = found?.[1] === undefined ? undefined : DAY_WORDS[found[1].toLowerCase()]
+      if (found && named !== undefined) {
+        ctx.day = named
+        ctx.cursor = null
+        chained = false
+        text = tidy(text.slice(0, found.index) + ' ' + text.slice(found.index + found[0].length))
+        break
+      }
+    }
+  }
+
   // #todo anywhere on the line marks it as a task.
-  let isTodo = false
+  let isTodo = ctx.forceTodo
   text = text.replace(/(^|\s)#(todo|task|oppgave)\b/gi, (_m, lead: string) => {
     isTodo = true
     return lead
@@ -268,15 +295,25 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
 /** Splits a line into items on "then", which also chains each item to the previous end. */
 const SEPARATOR = /(?:,\s*)?\b(?:then|and\s+then|så|deretter)\b\s*/gi
 
+/** #todo splits a line: everything after the tag is the task, not what came before. */
+const TODO_TAG = /#(?:todo|task|oppgave)\b/gi
+
 export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
   const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], day: opts.day ?? 0 }
-  const ctx: SegmentContext = { day: opts.day ?? 0, cursor: null, chained: false }
+  const ctx: SegmentContext = { day: opts.day ?? 0, cursor: null, chained: false, forceTodo: false }
 
   for (const line of input.split(/\r?\n/)) {
     if (!line.trim()) continue
 
+    TODO_TAG.lastIndex = 0
+    const chunks = line.split(TODO_TAG)
+
+    for (const [chunkIndex, chunk] of chunks.entries()) {
+    if (!chunk.trim()) continue
+    ctx.forceTodo = chunkIndex > 0
+
     SEPARATOR.lastIndex = 0
-    const pieces = line.split(SEPARATOR)
+    const pieces = chunk.split(SEPARATOR)
     let first = true
 
     for (const piece of pieces) {
@@ -298,6 +335,7 @@ export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
       } else {
         result.unparsed.push({ raw: seg.raw, reason: seg.reason })
       }
+    }
     }
   }
 
