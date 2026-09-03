@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Clock } from './Clock'
 import { BlockDetail, NewWeekDialog } from './Dialogs'
+import { PhoneWeek } from './PhoneWeek'
 import { PromptBar } from './PromptBar'
 import { TodoRail } from './TodoRail'
 import { GHOST_PREFIX, Week } from './Week'
-import { fmtDuration, type Block } from './model'
+import { fmtDuration, type Block, type Day } from './model'
 import type { ParseResult } from './parse'
 import { nowMinutes, todayIndex, usePlan } from './store'
+import { useMedia } from './useMedia'
 
 export default function App() {
   const { plan, commit, updateBlock, removeBlock, toggleTodo, newWeek } = usePlan()
@@ -16,6 +18,9 @@ export default function App() {
   const [now, setNow] = useState(nowMinutes)
 
   const today = todayIndex()
+  const isPhone = useMedia('(max-width: 700px)')
+  /** Which day the phone view is showing; also where the prompt files an undated line. */
+  const [viewDay, setViewDay] = useState<Day>(today)
 
   useEffect(() => {
     const tick = setInterval(() => setNow(nowMinutes()), 30_000)
@@ -65,19 +70,35 @@ export default function App() {
         </div>
       </header>
 
-      <div className="body">
-        <Week
-          plan={plan}
-          ghosts={ghosts}
-          today={today}
-          now={now}
-          onSelect={(b) => setSelectedId(b.id)}
-          isTodoDone={isTodoDone}
-        />
-        <TodoRail plan={plan} onToggle={toggleTodo} />
+      <div className={isPhone ? 'body is-phone' : 'body'}>
+        {isPhone ? (
+          <PhoneWeek
+            plan={plan}
+            ghosts={ghosts}
+            today={today}
+            day={viewDay}
+            onDayChange={setViewDay}
+            now={now}
+            onSelect={(b) => setSelectedId(b.id)}
+            onToggleTodo={toggleTodo}
+            isTodoDone={isTodoDone}
+          />
+        ) : (
+          <>
+            <Week
+              plan={plan}
+              ghosts={ghosts}
+              today={today}
+              now={now}
+              onSelect={(b) => setSelectedId(b.id)}
+              isTodoDone={isTodoDone}
+            />
+            <TodoRail plan={plan} onToggle={toggleTodo} />
+          </>
+        )}
       </div>
 
-      <PromptBar day={today} onPreview={setPreview} onCommit={handleCommit} />
+      <PromptBar day={isPhone ? viewDay : today} onPreview={setPreview} onCommit={handleCommit} />
 
       {selected && (
         <BlockDetail
