@@ -1,0 +1,11 @@
+# Sync API for Week. Deploy with: npx wrangler deploy
+name = "week-sync"
+main = "worker/index.ts"
+compatibility_date = "2026-09-03"
+workers_dev = true
+
+# Created with: npx wrangler kv namespace create WEEK
+# Paste the printed id below, then deploy.
+[[kv_namespaces]]
+binding = "WEEK"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

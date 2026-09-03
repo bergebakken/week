@@ -20,6 +20,8 @@ export interface Block {
   todoId?: string
   /** Survives "New week". */
   recurring?: boolean
+  /** When this was last changed, so two devices can be merged. */
+  updatedAt: number
 }
 
 export interface Todo {
@@ -29,15 +31,24 @@ export interface Todo {
   done: boolean
   /** Set when the todo also occupies time in the grid. */
   blockId?: string
+  /** When this was last changed, so two devices can be merged. */
+  updatedAt: number
 }
+
+export const PLAN_VERSION = 2
 
 export interface Plan {
-  version: 1
+  version: typeof PLAN_VERSION
   blocks: Block[]
   todos: Todo[]
+  /**
+   * Ids that have been deleted, and when. Without these a delete on one device
+   * looks like a missing item on the other and simply comes back.
+   */
+  tombstones: Record<string, number>
 }
 
-export const emptyPlan = (): Plan => ({ version: 1, blocks: [], todos: [] })
+export const emptyPlan = (): Plan => ({ version: PLAN_VERSION, blocks: [], todos: [], tombstones: {} })
 
 export const MINUTES_IN_DAY = 24 * 60
 

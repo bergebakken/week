@@ -24,3 +24,12 @@ export function Spark({ size = 11 }) {
     </svg>
   )
 }
+
+export function Gear({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="2.6" />
+      <path d="M10 2.2v2.1M10 15.7v2.1M2.2 10h2.1M15.7 10h2.1M4.5 4.5 6 6M14 14l1.5 1.5M15.5 4.5 14 6M6 14l-1.5 1.5" />
+    </svg>
+  )
+}

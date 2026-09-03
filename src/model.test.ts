@@ -36,11 +36,11 @@ describe('formatting', () => {
 describe('committed time', () => {
   it('adds up only the day asked for', () => {
     const block = (day: 0 | 1, start: number, end: number): Block =>
-      ({ id: `${day}-${start}`, day, start, end, title: 't', category: 'other' })
+      ({ id: `${day}-${start}`, day, start, end, title: 't', category: 'other', updatedAt: 0 })
     const plan: Plan = {
-      version: 1,
+      version: 2,
       blocks: [block(0, 480, 600), block(0, 660, 690), block(1, 540, 600)],
-      todos: [],
+      todos: [], tombstones: {},
     }
     expect(committedMinutes(plan, 0)).toBe(150)
     expect(committedMinutes(plan, 1)).toBe(60)

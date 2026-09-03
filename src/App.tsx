@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Clock } from './Clock'
 import { DailyQuote, FactButton } from './Daily'
+import { Gear } from './Icons'
+import { Settings } from './Settings'
 import { BlockDetail, NewWeekDialog } from './Dialogs'
 import { PhoneWeek } from './PhoneWeek'
 import { PromptBar } from './PromptBar'
@@ -12,10 +14,11 @@ import { nowMinutes, todayIndex, usePlan } from './store'
 import { useMedia } from './useMedia'
 
 export default function App() {
-  const { plan, commit, updateBlock, removeBlock, toggleTodo, newWeek } = usePlan()
+  const { plan, commit, updateBlock, removeBlock, toggleTodo, newWeek, sync, syncState, configure } = usePlan()
   const [preview, setPreview] = useState<ParseResult | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [now, setNow] = useState(nowMinutes)
 
   const today = todayIndex()
@@ -30,7 +33,7 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setSelectedId(null); setConfirming(false) }
+      if (e.key === 'Escape') { setSelectedId(null); setConfirming(false); setSettingsOpen(false) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -41,7 +44,7 @@ export default function App() {
     () => (preview?.blocks ?? []).map((d, i) => ({
       id: `${GHOST_PREFIX}${i}`,
       day: d.day, start: d.start, end: d.end,
-      title: d.title, note: d.note, category: d.category,
+      title: d.title, note: d.note, category: d.category, updatedAt: 0,
     })),
     [preview],
   )
@@ -70,6 +73,15 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Clock />
           <FactButton />
+          <button
+            className="icon-btn"
+            data-sync={syncState.status}
+            aria-label="Sync settings"
+            title={syncState.status === 'error' ? `Sync problem: ${syncState.message}` : `Sync: ${syncState.status}`}
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Gear />
+          </button>
           <button className="ghost-btn" onClick={() => setConfirming(true)}>New week</button>
         </div>
       </header>
@@ -112,6 +124,15 @@ export default function App() {
           onDelete={() => { removeBlock(selected.id); setSelectedId(null) }}
           onToggleTodo={toggleTodo}
           onClose={() => setSelectedId(null)}
+        />
+      )}
+
+      {settingsOpen && (
+        <Settings
+          sync={sync}
+          state={syncState}
+          onChange={configure}
+          onClose={() => setSettingsOpen(false)}
         />
       )}
 

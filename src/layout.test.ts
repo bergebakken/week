@@ -4,7 +4,7 @@ import type { Block, Category } from './model'
 
 let n = 0
 const block = (start: number, end: number, title = `b${n++}`, category: Category = 'other'): Block =>
-  ({ id: String(n), day: 0, start, end, title, category })
+  ({ id: String(n), day: 0, start, end, title, category, updatedAt: 0 })
 
 const shape = (rows: ReturnType<typeof layoutDay>) =>
   rows.map((r) => (r.kind === 'gap' ? `gap ${r.to - r.from}m` : r.block.title))

@@ -307,3 +307,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (max-width: 1180px) { .quote { display: none; } }
 @media (max-width: 700px) { .fact-card { position: fixed; top: 58px; left: 12px; right: 12px; width: auto; } }
+
+/* ---------- settings and sync status ---------- */
+
+.icon-btn {
+  width: 32px; height: 32px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border); border-radius: 3px; color: var(--dim);
+}
+.icon-btn:hover { color: var(--text-2); border-color: #3b352c; }
+.icon-btn[data-sync='off'] { color: var(--faint); }
+.icon-btn[data-sync='syncing'] { color: var(--accent); border-color: rgba(224, 164, 88, 0.45); animation: breathe 1.4s ease-in-out infinite; }
+.icon-btn[data-sync='ok'] { color: #7e8f76; border-color: rgba(140, 163, 131, 0.35); }
+.icon-btn[data-sync='error'] { color: #c79c9c; border-color: rgba(185, 138, 138, 0.45); }
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .icon-btn[data-sync='syncing'] { animation: none; } }
+
+[data-sync='error'] { color: #c79c9c; }
+.card .row .ghost-btn { flex: 0 0 auto; }

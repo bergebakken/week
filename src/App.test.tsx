@@ -105,6 +105,57 @@ describe('the app', () => {
     expect(host.querySelectorAll('.clock svg circle')).toHaveLength(2)
   })
 
+  it('stays off the network entirely until sync is set up', async () => {
+    const calls: string[] = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = ((input: unknown) => {
+      calls.push(String(input))
+      return Promise.reject(new Error('should not be called'))
+    }) as typeof fetch
+    try {
+      await render()
+      const area = await type('monday gym 1h at 17')
+      await act(async () => {
+        area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+      })
+      expect(calls).toEqual([])
+      expect(host.querySelector('.icon-btn')?.getAttribute('data-sync')).toBe('off')
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
+
+  it('will not connect sync without an address and a code', async () => {
+    await render()
+    await act(async () => { host.querySelector<HTMLElement>('.icon-btn')?.click() })
+
+    const card = host.querySelector('.card')
+    expect(card?.textContent).toContain('This plan lives in this browser only')
+
+    const connect = card?.querySelector<HTMLButtonElement>('.primary')
+    expect(connect?.disabled).toBe(true)
+    expect(connect?.textContent).toBe('Connect')
+  })
+
+  it('accepts an address plus a generated code', async () => {
+    await render()
+    await act(async () => { host.querySelector<HTMLElement>('.icon-btn')?.click() })
+
+    const card = host.querySelector('.card')
+    const address = card?.querySelector<HTMLInputElement>('input')
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+    setter?.call(address, 'https://week-sync.example.workers.dev')
+    await act(async () => { address?.dispatchEvent(new Event('input', { bubbles: true })) })
+
+    const makeCode = [...card?.querySelectorAll<HTMLElement>('.ghost-btn') ?? []]
+      .find((b) => b.textContent === 'New code')
+    await act(async () => { makeCode?.click() })
+
+    const code = card?.querySelectorAll<HTMLInputElement>('input')[1]
+    expect(code?.value).toMatch(/^[a-f0-9]{32}$/)
+    expect(card?.querySelector<HTMLButtonElement>('.primary')?.disabled).toBe(false)
+  })
+
   it('shows a quote of the day with its author', async () => {
     await render()
     const text = host.querySelector('.quote-text')?.textContent ?? ''
