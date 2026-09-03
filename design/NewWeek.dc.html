@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
+  <style>
+    body { margin:0; font-family:'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#E0A458; } a:hover { color:#F0BC78; }
+    .lbl { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px; letter-spacing:0.11em; }
+    .row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid #211E19; }
+    .rn { font-size:13px; line-height:1.3; }
+    .rt { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px; letter-spacing:0.05em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  </style>
+</helmet>
+
+<div style="width:720px; height:620px; background:#0B0A09; display:flex; align-items:center; justify-content:center; overflow:hidden">
+
+  <div style="width:568px; background:#16140F; border:1px solid #332E25; border-radius:6px; box-shadow:0 24px 60px rgba(0,0,0,0.65); padding:26px; display:flex; flex-direction:column; gap:20px">
+
+    <div style="display:flex; flex-direction:column; gap:7px">
+      <span style="font-family:'Instrument Serif', Georgia, serif; font-size:30px; color:#EFEAE0; line-height:1.05">Start a new week</span>
+      <span style="font-size:13px; color:#8A847A; line-height:1.5">Anything marked <span style="color:#BDB6AB">repeat every week</span> stays. Everything else clears, and open todos carry over.</span>
+    </div>
+
+    <div style="display:flex; gap:22px">
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:9px">
+        <div style="display:flex; align-items:center; gap:8px">
+          <span class="lbl" style="color:#7E8F76">KEPT · 6 BLOCKS</span>
+          <span style="flex:1; height:0; border-top:1px solid #262219"></span>
+        </div>
+        <div style="display:flex; flex-direction:column">
+          <div class="row"><span class="rn" style="color:#DCD6CB">School</span><span class="rt" style="color:#93A7C0">TUE THU FRI · 08:00</span></div>
+          <div class="row"><span class="rn" style="color:#DCD6CB">Gym</span><span class="rt" style="color:#9CB292">MON THU · 17:00</span></div>
+          <div class="row" style="border-bottom:none"><span class="rn" style="color:#DCD6CB">Swim</span><span class="rt" style="color:#9CB292">WED · 09:00</span></div>
+        </div>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:9px">
+        <div style="display:flex; align-items:center; gap:8px">
+          <span class="lbl" style="color:#6B665E">CLEARED · 37 BLOCKS</span>
+          <span style="flex:1; height:0; border-top:1px solid #262219"></span>
+        </div>
+        <div style="display:flex; flex-direction:column">
+          <div class="row"><span class="rn" style="color:#5C574E; text-decoration:line-through">Bike ride, Long ride</span><span class="rt" style="color:#453F38">6H</span></div>
+          <div class="row"><span class="rn" style="color:#5C574E; text-decoration:line-through">Math ×4</span><span class="rt" style="color:#453F38">12H</span></div>
+          <div class="row" style="border-bottom:none"><span class="rn" style="color:#5C574E; text-decoration:line-through">31 others</span><span class="rt" style="color:#453F38">25H 15M</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex; align-items:flex-start; gap:10px; background:rgba(156,139,168,0.07); border:1px solid rgba(156,139,168,0.20); border-radius:4px; padding:12px 14px">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex:0 0 auto; margin-top:2px"><rect x="1" y="1" width="11" height="11" rx="2" stroke="#AC9BB8" stroke-width="1.2"/></svg>
+      <span style="font-size:12.5px; line-height:1.45; color:#ABA2B4">4 open todos carry over. <span style="color:#6B665E">1 completed todo will be archived.</span></span>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:18px; border-top:1px solid #262219">
+      <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; letter-spacing:0.08em; color:#4E4941">THIS CANNOT BE UNDONE</span>
+      <div style="display:flex; align-items:center; gap:9px">
+        <button style="font-size:12.5px; color:#8A847A; background:transparent; border:1px solid #2E2A24; border-radius:3px; padding:9px 15px; cursor:pointer">Cancel</button>
+        <button style="font-size:12.5px; color:#100F0D; font-weight:600; background:#E0A458; border:none; border-radius:3px; padding:10px 18px; cursor:pointer">Start new week</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

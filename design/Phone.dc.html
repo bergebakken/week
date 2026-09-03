@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
+  <style>
+    body { margin:0; font-family:'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#E0A458; } a:hover { color:#F0BC78; }
+    .blk { border-radius:4px; padding:10px 13px; border:1px solid; display:flex; flex-direction:column; gap:3px; overflow:hidden; flex:0 0 auto; justify-content:center; }
+    .t { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.045em; font-variant-numeric:tabular-nums; }
+    .ti { font-size:15px; font-weight:500; line-height:1.25; }
+    .no { font-size:12px; line-height:1.35; }
+    .gp { display:flex; align-items:center; gap:10px; height:22px; flex:0 0 auto; }
+    .gl { flex:1; height:0; border-top:1px dashed #2C2822; }
+    .gt { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9px; letter-spacing:0.1em; color:#5C574E; white-space:nowrap; }
+  </style>
+</helmet>
+
+<div style="width:390px; height:844px; background:#100F0D; color:#EFEAE0; display:flex; flex-direction:column; overflow:hidden; padding-top:44px; box-sizing:border-box">
+
+  <div style="flex:0 0 auto; padding:6px 16px 14px; border-bottom:1px solid #221F1A">
+    <div style="display:flex; align-items:center; justify-content:space-between">
+      <button style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; cursor:pointer">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="#6B665E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3.5 5.5 9l5.5 5.5"/></svg>
+      </button>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px">
+        <span style="font-family:'Instrument Serif', Georgia, serif; font-size:28px; color:#E0A458; line-height:1">Tuesday</span>
+        <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; letter-spacing:0.1em; color:#8A7A5E">TODAY · 8H 45M PLANNED</span>
+      </div>
+      <button style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:transparent; border:none; cursor:pointer">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="#6B665E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5 12.5 9 7 14.5"/></svg>
+      </button>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:10px">
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+      <span style="width:16px; height:5px; border-radius:3px; background:#E0A458"></span>
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+      <span style="width:5px; height:5px; border-radius:50%; background:#332E27"></span>
+    </div>
+  </div>
+
+  <div style="flex:1 1 auto; min-height:0; display:flex; flex-direction:column; gap:7px; padding:14px 16px 0">
+    <div class="blk" style="height:135px; background:rgba(127,148,176,0.10); border-color:rgba(127,148,176,0.24); justify-content:flex-start"><div class="t" style="color:#93A7C0">08:00 → 11:00</div><div class="ti" style="color:#E8E2D6">School</div></div>
+    <div class="gp"><span class="gl"></span><span class="gt">1H FREE</span><span class="gl"></span></div>
+    <div class="blk" style="height:44px; background:rgba(191,160,106,0.10); border-color:rgba(191,160,106,0.24)"><div class="t" style="color:#C8AC7C">12:00 · 30m</div><div class="ti" style="color:#E8E2D6">Lunch</div></div>
+    <div class="blk" style="height:56px; background:rgba(140,163,131,0.10); border-color:rgba(140,163,131,0.24); position:relative"><div class="t" style="color:#9CB292">13:00 · 1h</div><div class="ti" style="color:#E8E2D6">Gym</div>
+      <div style="position:absolute; left:0; right:0; top:33%; height:0; border-top:1px solid #E0A458; display:flex; align-items:center; justify-content:space-between">
+        <span style="width:6px; height:6px; border-radius:50%; background:#E0A458; margin-left:-3px"></span>
+        <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; color:#E0A458; background:#1C1E19; padding:0 5px; letter-spacing:0.05em">13:20</span>
+      </div>
+    </div>
+    <div class="gp"><span class="gl"></span><span class="gt">1H FREE</span><span class="gl"></span></div>
+    <div class="blk" style="height:90px; background:rgba(127,148,176,0.10); border-color:rgba(127,148,176,0.24); justify-content:flex-start"><div class="t" style="color:#93A7C0">15:00 · 2h</div><div class="ti" style="color:#E8E2D6">Math</div></div>
+    <div class="gp"><span class="gl"></span><span class="gt">1H 30M FREE</span><span class="gl"></span></div>
+    <div class="blk" style="height:44px; background:rgba(191,160,106,0.10); border-color:rgba(191,160,106,0.24)"><div class="t" style="color:#C8AC7C">18:30 · 45m</div><div class="ti" style="color:#E8E2D6">Dinner</div></div>
+    <div class="gp"><span class="gl"></span><span class="gt">45M FREE</span><span class="gl"></span></div>
+    <div class="blk" style="height:67px; background:rgba(185,138,138,0.10); border-color:rgba(185,138,138,0.24); justify-content:flex-start"><div class="t" style="color:#C79C9C">20:00 · 1h 30m</div><div class="ti" style="color:#E8E2D6">Reading</div></div>
+  </div>
+
+  <div style="flex:0 0 auto; display:flex; align-items:center; gap:12px; padding:14px 16px 24px; border-top:1px solid #221F1A; background:#131210">
+    <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:18px; color:#E0A458; line-height:1">&rsaquo;</span>
+    <span style="flex:1; font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:14px; color:#57524A">gym 1h at 17</span>
+    <button style="width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:#1C1915; border:1px solid #2E2A24; border-radius:4px; cursor:pointer">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="#9A948A" stroke-width="1.5" stroke-linecap="round"><path d="M9 3.5v11M3.5 9h11"/></svg>
+    </button>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

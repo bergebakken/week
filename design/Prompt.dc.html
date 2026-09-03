@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
+  <style>
+    body { margin:0; font-family:'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#E0A458; } a:hover { color:#F0BC78; }
+    .col { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:6px; padding:0 8px; }
+    .dh { display:flex; flex-direction:column; gap:3px; padding-bottom:9px; border-bottom:1px solid #24211C; }
+    .dn { font-family:'Instrument Serif', Georgia, serif; font-size:21px; line-height:1; }
+    .dt { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; letter-spacing:0.08em; font-variant-numeric:tabular-nums; }
+    .blk { border-radius:3px; padding:7px 9px 8px; border:1px solid; display:flex; flex-direction:column; gap:2px; overflow:hidden; flex:0 0 auto; }
+    .t { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:10px; letter-spacing:0.045em; font-variant-numeric:tabular-nums; }
+    .ti { font-size:13px; font-weight:500; line-height:1.22; }
+    .no { font-size:11px; line-height:1.32; }
+    .gp { display:flex; align-items:center; gap:8px; height:20px; flex:0 0 auto; }
+    .gl { flex:1; height:0; border-top:1px dashed #2C2822; }
+    .gt { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px; letter-spacing:0.09em; color:#5C574E; white-space:nowrap; }
+    .line { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:13.5px; line-height:1.55; }
+    .res { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:11px; letter-spacing:0.03em; white-space:nowrap; }
+  </style>
+</helmet>
+
+<div style="width:940px; height:760px; background:#100F0D; color:#EFEAE0; display:flex; flex-direction:column; overflow:hidden">
+
+  <div style="flex:1 1 auto; min-height:0; display:flex; gap:8px; padding:24px 24px 0">
+
+    <div class="col">
+      <div class="dh"><div class="dn" style="color:#EFEAE0">Wednesday</div><div class="dt" style="color:#6B665E">3H 30M</div></div>
+      <div class="blk" style="height:45px; background:rgba(140,163,131,0.10); border-color:rgba(140,163,131,0.24)"><div class="t" style="color:#9CB292">09:00 · 1h</div><div class="ti" style="color:#E8E2D6">Swim</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">3H FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:32px; background:rgba(191,160,106,0.10); border-color:rgba(191,160,106,0.24); padding-top:5px"><div class="t" style="color:#C8AC7C">13:00 · 30m</div><div class="ti" style="color:#E8E2D6">Lunch</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">5H 30M FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:90px; background:rgba(185,138,138,0.10); border-color:rgba(185,138,138,0.24)"><div class="t" style="color:#C79C9C">19:00 · 2h</div><div class="ti" style="color:#E8E2D6">Dinner with Ida</div></div>
+    </div>
+
+    <div class="col" style="background:#141310; border:1px solid #2A251D; border-radius:5px; padding:8px 8px 10px">
+      <div class="dh"><div class="dn" style="color:#EFEAE0">Thursday</div><div class="dt" style="color:#8A7A5E">4 BLOCKS INCOMING</div></div>
+      <div class="blk" style="height:90px; background:rgba(140,163,131,0.05); border:1px dashed rgba(140,163,131,0.38); opacity:0.75"><div class="t" style="color:#9CB292">08:00 · 2h</div><div class="ti" style="color:#C9C3B8">Bike ride</div><div class="no" style="color:#77716A">5×10 intervals</div></div>
+      <div class="blk" style="height:32px; background:rgba(185,138,138,0.05); border:1px dashed rgba(185,138,138,0.38); opacity:0.75; padding-top:5px"><div class="t" style="color:#C79C9C">10:00 · 15m</div><div class="ti" style="color:#C9C3B8">Shower</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">1H 45M FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:32px; background:rgba(191,160,106,0.05); border:1px dashed rgba(191,160,106,0.38); opacity:0.75; padding-top:5px"><div class="t" style="color:#C8AC7C">12:00 · 30m</div><div class="ti" style="color:#C9C3B8">Lunch</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">6H 30M FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:45px; background:rgba(156,139,168,0.05); border:1px dashed rgba(156,139,168,0.38); opacity:0.75"><div class="t" style="color:#AC9BB8">19:00 · 1h</div>
+        <div style="display:flex; align-items:center; gap:6px">
+          <svg width="12" height="12" viewBox="0 0 13 13" fill="none" style="flex:0 0 auto"><rect x="1" y="1" width="11" height="11" rx="2" stroke="#AC9BB8" stroke-width="1.2"/></svg>
+          <span class="ti" style="color:#C9C3B8">Send application</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="dh"><div class="dn" style="color:#EFEAE0">Friday</div><div class="dt" style="color:#6B665E">9H</div></div>
+      <div class="blk" style="height:135px; background:rgba(127,148,176,0.10); border-color:rgba(127,148,176,0.24)"><div class="t" style="color:#93A7C0">08:00 → 11:00</div><div class="ti" style="color:#E8E2D6">School</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">1H FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:32px; background:rgba(191,160,106,0.10); border-color:rgba(191,160,106,0.24); padding-top:5px"><div class="t" style="color:#C8AC7C">12:00 · 30m</div><div class="ti" style="color:#E8E2D6">Lunch</div></div>
+      <div class="gp"><span class="gl"></span><span class="gt">1H 30M FREE</span><span class="gl"></span></div>
+      <div class="blk" style="height:67px; background:rgba(127,148,176,0.10); border-color:rgba(127,148,176,0.24)"><div class="t" style="color:#93A7C0">14:00 · 1h 30m</div><div class="ti" style="color:#E8E2D6">Physics lab</div></div>
+    </div>
+
+  </div>
+
+  <div style="flex:0 0 auto; border-top:1px solid #221F1A; background:#131210; padding:18px 24px 20px">
+    <div style="display:flex; gap:14px; align-items:flex-start">
+      <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:17px; color:#E0A458; line-height:1.55">&rsaquo;</span>
+      <div style="flex:1; display:flex; flex-direction:column">
+
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1">Thursday</span>
+          <span class="res" style="color:#5C574E">day set</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1">8 bike ride 2h, intervals 5x10</span>
+          <span class="res" style="color:#7E8F76">→ 08:00–10:00 &nbsp;Bike ride</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1">then shower 15min</span>
+          <span class="res" style="color:#A88585">→ 10:00–10:15 &nbsp;Shower</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1">lunch 30 min at 12</span>
+          <span class="res" style="color:#A8925F">→ 12:00–12:30 &nbsp;Lunch</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1"><span style="color:#AC9BB8">#todo</span> send application 1h from 19</span>
+          <span class="res" style="color:#8A7FA0">→ 19:00–20:00 &nbsp;Todo</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:16px">
+          <span class="line" style="color:#EFEAE0; flex:1">gym sometime after lunch<span style="display:inline-block; width:1.5px; height:15px; background:#E0A458; vertical-align:-2px; margin-left:1px"></span></span>
+          <span class="res" style="display:flex; align-items:center; gap:7px; color:#E0A458">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#E0A458" stroke-width="1.3" stroke-linecap="round"><path d="M6 1.5v2M6 8.5v2M1.5 6h2M8.5 6h2M2.8 2.8l1.4 1.4M7.8 7.8l1.4 1.4M9.2 2.8 7.8 4.2M4.2 7.8 2.8 9.2"/></svg>
+            asking Claude
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:13px; border-top:1px solid #1E1B17">
+      <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; letter-spacing:0.08em; color:#4E4941">RETURN TO ADD ALL &nbsp;·&nbsp; SHIFT+RETURN FOR A NEW LINE &nbsp;·&nbsp; ESC TO CLEAR</span>
+      <span style="font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:9.5px; letter-spacing:0.08em; color:#7E8F76">4 PARSED &nbsp;·&nbsp; <span style="color:#E0A458">1 PENDING</span></span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

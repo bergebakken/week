@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
+  <style>
+    body { margin:0; font-family:'Instrument Sans', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+    a { color:#E0A458; } a:hover { color:#F0BC78; }
+    .lbl { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:8.5px; letter-spacing:0.11em; color:#5C574E; }
+    .fld { font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:14px; color:#EFEAE0; font-variant-numeric:tabular-nums; background:#1A1814; border:1px solid #2E2A24; border-radius:3px; padding:8px 10px; }
+    .chip { font-size:11.5px; border-radius:3px; padding:5px 10px; border:1px solid; cursor:pointer; }
+  </style>
+</helmet>
+
+<div style="width:640px; height:560px; background:#0B0A09; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative">
+
+  <div style="position:absolute; inset:0; display:flex; gap:8px; padding:22px; opacity:0.25">
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+      <div style="height:70px; border-radius:3px; background:rgba(127,148,176,0.10); border:1px solid rgba(127,148,176,0.24)"></div>
+      <div style="height:32px; border-radius:3px; background:rgba(191,160,106,0.10); border:1px solid rgba(191,160,106,0.24)"></div>
+      <div style="height:150px; border-radius:3px; background:rgba(140,163,131,0.10); border:1px solid rgba(140,163,131,0.24)"></div>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+      <div style="height:110px; border-radius:3px; background:rgba(127,148,176,0.10); border:1px solid rgba(127,148,176,0.24)"></div>
+      <div style="height:45px; border-radius:3px; background:rgba(185,138,138,0.10); border:1px solid rgba(185,138,138,0.24)"></div>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+      <div style="height:180px; border-radius:3px; background:rgba(156,139,168,0.10); border:1px solid rgba(156,139,168,0.24)"></div>
+      <div style="height:60px; border-radius:3px; background:rgba(191,160,106,0.10); border:1px solid rgba(191,160,106,0.24)"></div>
+    </div>
+  </div>
+
+  <div style="position:relative; width:404px; background:#16140F; border:1px solid #332E25; border-radius:6px; box-shadow:0 24px 60px rgba(0,0,0,0.65); padding:22px; display:flex; flex-direction:column; gap:18px">
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px">
+      <div style="display:flex; flex-direction:column; gap:7px; flex:1">
+        <span class="lbl">THURSDAY</span>
+        <div style="display:flex; align-items:center; gap:9px">
+          <svg width="15" height="15" viewBox="0 0 13 13" fill="none" style="flex:0 0 auto"><rect x="1" y="1" width="11" height="11" rx="2" stroke="#AC9BB8" stroke-width="1.2"/></svg>
+          <span style="font-family:'Instrument Serif', Georgia, serif; font-size:26px; color:#EFEAE0; line-height:1.05">Send application</span>
+        </div>
+      </div>
+      <button style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; flex:0 0 auto; background:transparent; border:1px solid #2E2A24; border-radius:3px; cursor:pointer">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#8A847A" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 2.5 9.5 9.5M9.5 2.5 2.5 9.5"/></svg>
+      </button>
+    </div>
+
+    <div style="display:flex; gap:10px">
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+        <span class="lbl">STARTS</span>
+        <div class="fld">19:00</div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+        <span class="lbl">ENDS</span>
+        <div class="fld">20:00</div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px">
+        <span class="lbl">LENGTH</span>
+        <div class="fld" style="color:#8A847A">1h</div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <span class="lbl">CATEGORY</span>
+      <div style="display:flex; flex-wrap:wrap; gap:6px">
+        <span class="chip" style="color:#9CB292; background:rgba(140,163,131,0.08); border-color:rgba(140,163,131,0.20)">Movement</span>
+        <span class="chip" style="color:#93A7C0; background:rgba(127,148,176,0.08); border-color:rgba(127,148,176,0.20)">Study</span>
+        <span class="chip" style="color:#C8AC7C; background:rgba(191,160,106,0.08); border-color:rgba(191,160,106,0.20)">Food</span>
+        <span class="chip" style="color:#C79C9C; background:rgba(185,138,138,0.08); border-color:rgba(185,138,138,0.20)">Rest</span>
+        <span class="chip" style="color:#EFEAE0; background:rgba(156,139,168,0.22); border-color:rgba(156,139,168,0.55)">Admin</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <span class="lbl">NOTES</span>
+      <div style="font-size:13px; line-height:1.5; color:#BDB6AB; background:#1A1814; border:1px solid #2E2A24; border-radius:3px; padding:11px 12px; min-height:62px">Portfolio PDF, CV, and the cover letter draft from Sunday. Deadline is Friday noon.</div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:15px; border-top:1px solid #262219">
+      <div style="display:flex; align-items:center; gap:9px">
+        <span style="width:30px; height:17px; border-radius:9px; background:#2E2A24; position:relative; display:inline-block">
+          <span style="position:absolute; top:2.5px; left:2.5px; width:12px; height:12px; border-radius:50%; background:#6B665E"></span>
+        </span>
+        <span style="font-size:12px; color:#8A847A">Repeat every week</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px">
+        <button style="font-size:12px; color:#8A847A; background:transparent; border:1px solid #2E2A24; border-radius:3px; padding:7px 12px; cursor:pointer">Delete</button>
+        <button style="font-size:12px; color:#100F0D; font-weight:600; background:#E0A458; border:none; border-radius:3px; padding:8px 15px; cursor:pointer">Done</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",    "x": 0,    "y": 0,    "w": 1512, "h": 945, "title": "Week — desktop" },
+    { "file": "Prompt.dc.html",  "x": 0,    "y": 1085, "w": 940,  "h": 760, "title": "Prompt — live parse" },
+    { "file": "Detail.dc.html",  "x": 1040, "y": 1085, "w": 640,  "h": 560, "title": "Block detail" },
+    { "file": "Phone.dc.html",   "x": 1780, "y": 1085, "w": 390,  "h": 844, "title": "Phone — one day" },
+    { "file": "NewWeek.dc.html", "x": 0,    "y": 2069, "w": 720,  "h": 620, "title": "New week" }
+  ],
+  "annotations": [
+    { "id": "gap-collapse", "x": 1600, "y": 60, "w": 300, "text": "Block height tracks duration, with a floor so a 15-minute shower stays readable.\n\nEmpty stretches never take up space — they collapse to one dashed line. Compare Monday (10h 30m) with Wednesday (3h 30m): you can see the difference without reading a word." },
+    { "id": "parse-fallback", "x": 2250, "y": 1085, "w": 300, "text": "Every line parses locally as you type — instant, free, offline.\n\nThe last line is one the parser can't read. That's the only kind of line that goes to Claude, and the only kind that costs anything." },
+    { "id": "todo-model", "x": 2250, "y": 1340, "w": 300, "text": "A todo is one object in two places. Unscheduled it sits in the right rail; give it a time and it also becomes a block, carrying its checkbox. Tick it anywhere, it ticks everywhere." },
+    { "id": "reset-rule", "x": 820, "y": 2069, "w": 300, "text": "Nothing resets on its own. Mark the fixed things — school, gym, swim — as repeating once, and this button clears the rest whenever you're ready to plan." }
+  ],
+  "launch": { "view": "canvas" }
+}

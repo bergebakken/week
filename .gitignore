@@ -1,0 +1,9 @@
+node_modules
+dist
+.DS_Store
+.env
+.env.local
+.wrangler
+
+# generated from the .dc.html sources; the live copy is the published artifact
+design/week-planner.html
