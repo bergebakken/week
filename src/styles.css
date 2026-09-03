@@ -266,3 +266,44 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .wordmark .meta { display: none; }
   .prompt { padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
 }
+
+/* ---------- daily quote and fact ---------- */
+
+.quote {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; padding: 0 8px;
+  display: flex; align-items: baseline; justify-content: center; gap: 10px;
+}
+.quote-text {
+  font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.quote-author {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--fainter); white-space: nowrap; flex: 0 0 auto;
+}
+
+.fact { position: relative; flex: 0 0 auto; }
+.fact-btn {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border); border-radius: 3px; color: var(--dim);
+}
+.fact-btn:hover, .fact-btn[aria-expanded='true'] { color: var(--accent); border-color: var(--accent); }
+
+.fact-card {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 330px; z-index: 20;
+  background: #16140f; border: 1px solid #332e25; border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: fact-in 0.16s ease both;
+}
+@keyframes fact-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fact-card { animation: none; } }
+
+.fact-number { display: flex; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #262219; }
+.fact-n { font-family: var(--serif); font-size: 34px; line-height: 0.9; color: var(--accent); flex: 0 0 auto; }
+.fact-note { font-size: 11.5px; line-height: 1.45; color: var(--dim); }
+.fact-text { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-2); text-wrap: pretty; }
+.fact-card .ghost-btn { align-self: flex-start; }
+
+@media (max-width: 1180px) { .quote { display: none; } }
+@media (max-width: 700px) { .fact-card { position: fixed; top: 58px; left: 12px; right: 12px; width: auto; } }

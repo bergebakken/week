@@ -105,6 +105,35 @@ describe('the app', () => {
     expect(host.querySelectorAll('.clock svg circle')).toHaveLength(2)
   })
 
+  it('shows a quote of the day with its author', async () => {
+    await render()
+    const text = host.querySelector('.quote-text')?.textContent ?? ''
+    expect(text.length).toBeGreaterThan(12)
+    expect(text.startsWith('\u201c') && text.endsWith('\u201d')).toBe(true)
+    expect(host.querySelector('.quote-author')?.textContent?.length ?? 0).toBeGreaterThan(2)
+  })
+
+  it('opens a fact card with the number of the day, and swaps the fact', async () => {
+    await render()
+    expect(host.querySelector('.fact-card')).toBeNull()
+
+    const button = host.querySelector<HTMLElement>('.fact-btn')
+    await act(async () => { button?.click() })
+
+    const card = host.querySelector('.fact-card')
+    expect(card).toBeTruthy()
+    expect(host.querySelector('.fact-n')?.textContent).toMatch(/^\d{1,3}$/)
+    expect(host.querySelector('.fact-note')?.textContent).toContain('days left in the year')
+
+    const first = host.querySelector('.fact-text')?.textContent
+    const another = card?.querySelector<HTMLElement>('.ghost-btn')
+    await act(async () => { another?.click() })
+    expect(host.querySelector('.fact-text')?.textContent).not.toBe(first)
+
+    await act(async () => { button?.click() })
+    expect(host.querySelector('.fact-card')).toBeNull()
+  })
+
   it('keeps a short block readable rather than clipping its title', async () => {
     await render()
     // No end time, so it gets the default 30 minutes and lands on the height floor.

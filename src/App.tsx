@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Clock } from './Clock'
+import { DailyQuote, FactButton } from './Daily'
 import { BlockDetail, NewWeekDialog } from './Dialogs'
 import { PhoneWeek } from './PhoneWeek'
 import { PromptBar } from './PromptBar'
@@ -64,8 +65,11 @@ export default function App() {
             {planned > 0 ? `${fmtDuration(planned).toUpperCase()} PLANNED` : 'NOTHING PLANNED YET'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <DailyQuote />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Clock />
+          <FactButton />
           <button className="ghost-btn" onClick={() => setConfirming(true)}>New week</button>
         </div>
       </header>
