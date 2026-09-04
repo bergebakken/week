@@ -1,7 +1,21 @@
-# Turning on sync
+# Sync
 
-Until this is done, Week works exactly as before: the plan lives in one
-browser and never touches the network. Nothing below changes the app itself.
+**Already deployed.** The sync API runs at
+<https://week-sync.bergealpint.workers.dev> on the `bergealpint` Cloudflare
+account, backed by a KV namespace. Steps 1-4 below are done; they are kept as
+a record of how it was set up and what to repeat if it ever has to move.
+
+To check it is healthy at any time:
+
+    npm run check:sync
+
+That exercises the real endpoint: rejecting bad codes, storing and reading a
+plan, merging two devices, honouring a delete, refusing a stale resurrection,
+and the CORS rules.
+
+## What is left for you
+
+Connect each device - steps 5 and 6.
 
 ## 1. Make a Cloudflare account
 
@@ -42,7 +56,7 @@ Keep it.
 
 Open <https://bergebakken.github.io/week/>, click the gear in the header, and:
 
-- paste the address from step 4
+- paste `https://week-sync.bergealpint.workers.dev`
 - click **New code**, which makes a long random code
 - click **Connect**
 

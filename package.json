@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "deploy": "sh scripts/deploy.sh"
+    "deploy": "sh scripts/deploy.sh",
+    "check:sync": "node scripts/check-sync.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
