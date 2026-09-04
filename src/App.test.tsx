@@ -153,6 +153,38 @@ describe('the app', () => {
     }
   })
 
+  it('picks up sync details from the address bar and clears them away', async () => {
+    const realFetch = globalThis.fetch
+    globalThis.fetch = ((_url: string, init?: RequestInit) =>
+      Promise.resolve(new Response(init?.method === 'PUT' ? String(init.body) : 'null'))) as unknown as typeof fetch
+    const code = 'c'.repeat(32)
+    window.history.replaceState(null, '', `/week/?sync=https%3A%2F%2Fweek-sync.example.workers.dev&code=${code}`)
+
+    try {
+      await render()
+      expect(JSON.parse(window.localStorage.getItem('week.sync') ?? '{}')).toEqual({
+        url: 'https://week-sync.example.workers.dev', code,
+      })
+      // the code must not be left sitting in the address bar or in history
+      expect(window.location.search).toBe('')
+      expect(host.querySelector('.icon-btn')?.getAttribute('data-sync')).not.toBe('off')
+    } finally {
+      globalThis.fetch = realFetch
+      window.history.replaceState(null, '', '/')
+    }
+  })
+
+  it('ignores a malformed sync link', async () => {
+    window.history.replaceState(null, '', '/week/?sync=notaurl&code=short')
+    try {
+      await render()
+      expect(window.localStorage.getItem('week.sync')).toBeNull()
+      expect(host.querySelector('.icon-btn')?.getAttribute('data-sync')).toBe('off')
+    } finally {
+      window.history.replaceState(null, '', '/')
+    }
+  })
+
   it('stays off the network entirely until sync is set up', async () => {
     const calls: string[] = []
     const realFetch = globalThis.fetch

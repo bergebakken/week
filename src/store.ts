@@ -41,7 +41,35 @@ function loadPlan(): Plan {
   return migratePlan(read(PLAN_KEY, null))
 }
 
+/**
+ * Sync details handed over in the address bar, so a second device is a link to
+ * open rather than a 32-character code to type on a phone keyboard.
+ */
+function fromAddressBar(): SyncConfig | null {
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const url = params.get('sync')
+    const code = params.get('code')
+    if (!url || !code || !/^https?:\/\/\S+$/.test(url) || !/^[a-f0-9]{24,128}$/i.test(code)) return null
+
+    const config: SyncConfig = { url: url.replace(/\/+$/, ''), code: code.toLowerCase() }
+    window.localStorage.setItem(SYNC_KEY, JSON.stringify(config))
+
+    // Take it straight back out, so the code is not left sitting in history.
+    params.delete('sync')
+    params.delete('code')
+    const rest = params.toString()
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : '') + window.location.hash)
+    return config
+  } catch {
+    return null
+  }
+}
+
 function loadSync(): SyncConfig | null {
+  const handedOver = fromAddressBar()
+  if (handedOver) return handedOver
+
   const raw = read(SYNC_KEY, null)
   if (typeof raw !== 'object' || raw === null) return null
   const { url, code } = raw as Partial<SyncConfig>
