@@ -11,5 +11,5 @@
     "noEmit": true,
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["index.ts", "../src/sync.ts", "../src/model.ts"]
+  "include": ["index.ts", "interpret.ts", "../src/sync.ts", "../src/model.ts"]
 }

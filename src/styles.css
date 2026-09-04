@@ -327,3 +327,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card .row .ghost-btn { flex: 0 0 auto; }
 
 .hints .fixes { color: var(--accent-dim); letter-spacing: 0.06em; }
+
+.hints .problem { color: #c79c9c; letter-spacing: 0.06em; }
+.hints .asking { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font-style: normal; animation: breathe 1.4s ease-in-out infinite; }

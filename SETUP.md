@@ -85,3 +85,51 @@ same code**. That code is what ties the two devices together.
 
 Cloudflare's free tier covers 100,000 requests a day. Week checks for changes
 every 20 seconds while its tab is open, which is roughly 4,000 a day per device.
+
+---
+
+# Letting Claude read the odd line
+
+The parser handles anything with a time in it. Lines it cannot place — "gym
+sometime after lunch", "squeeze in a run before dinner" — are the only ones
+that go to Claude, and only when you press Return.
+
+**Everything is built and deployed. One step left: the key.**
+
+## 1. Make an API key
+
+<https://console.anthropic.com/settings/keys> — create a key and copy it.
+
+While you are there, set a spend limit at
+<https://console.anthropic.com/settings/limits>. Nothing here should approach
+it, but a limit is the thing that makes a mistake cheap.
+
+## 2. Give it to the worker
+
+    npx wrangler secret put ANTHROPIC_API_KEY
+
+Paste the key when it asks. It is stored by Cloudflare, never in this repo and
+never in the browser.
+
+## 3. Check it
+
+    npm run check:sync
+
+The last line changes from `SKIP interpretation` to a placed block.
+
+## What it costs
+
+Claude Opus 5 at low effort, roughly 600 tokens in and 200 out per line, so
+about a **penny per line it has to read** — and only for lines the parser gave
+up on. A normal week is a handful.
+
+The worker allows 100 interpretations per sync code per day. That cap exists
+because the sync code is the only lock: if it ever leaks, the worst case is
+capped at about a dollar a day rather than your whole limit.
+
+## If it goes wrong
+
+The line you typed comes back into the prompt with the reason underneath, so
+nothing you wrote is lost. Turning the key off again is
+`npx wrangler secret delete ANTHROPIC_API_KEY`; the app falls back to telling
+you it could not read the line.

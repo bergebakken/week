@@ -2,6 +2,7 @@
 name = "week-sync"
 main = "worker/index.ts"
 compatibility_date = "2026-09-03"
+compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 # Created with: npx wrangler kv namespace create WEEK

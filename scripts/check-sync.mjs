@@ -1,4 +1,5 @@
-const BASE = `${process.argv[2] ?? process.env.SYNC_URL ?? 'https://week-sync.bergealpint.workers.dev'}/plan`
+const ROOT = process.argv[2] ?? process.env.SYNC_URL ?? 'https://week-sync.bergealpint.workers.dev'
+const BASE = `${ROOT}/plan`
 const ORIGIN = 'https://bergebakken.github.io'
 const code = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('')
 
@@ -58,6 +59,30 @@ check('never grants CORS to another origin', r.headers.get('access-control-allow
 
 r = await call('POST', plan())
 check('refuses methods it does not serve', r.status, 405)
+
+// --- the interpretation endpoint ---
+const ask = (key, body) => fetch(`${ROOT}/interpret`, {
+  method: 'POST',
+  headers: { origin: ORIGIN, 'x-week-key': key, 'content-type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
+const stranger = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('')
+check('refuses a sync code that has no plan', (await ask(stranger, { lines: ['x'], context: { day: 0, existing: [] } })).status, 403)
+check('refuses GET on interpret', (await fetch(`${ROOT}/interpret`, { method: 'GET', headers: { origin: ORIGIN, 'x-week-key': code } })).status, 405)
+check('refuses an empty request', (await ask(code, { lines: [], context: { day: 0, existing: [] } })).status, 400)
+
+r = await ask(code, { lines: ['gym sometime after lunch'], context: { day: 0, existing: [] } })
+const interpreted = await r.json()
+if (r.status === 503) {
+  console.log('  SKIP  interpretation itself - no ANTHROPIC_API_KEY set on the worker yet')
+} else if (r.status === 200) {
+  const placed = Array.isArray(interpreted.blocks) && interpreted.blocks.length > 0
+  check('places a vague line', placed || (interpreted.unreadable ?? []).length > 0, true)
+  console.log('        ->', JSON.stringify(interpreted.blocks ?? []).slice(0, 160))
+} else {
+  check(`interpretation returned ${r.status}: ${interpreted.error}`, false, true)
+}
 
 console.log(ok ? '\nALL PASS' : '\nSOME CHECKS FAILED')
 process.exit(ok ? 0 : 1)

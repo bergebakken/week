@@ -1,8 +1,17 @@
 import { mergePlans, migratePlan } from '../src/sync'
+import { interpret, type Context } from './interpret'
 
 export interface Env {
   WEEK: KVNamespace
+  /** Set with: npx wrangler secret put ANTHROPIC_API_KEY */
+  ANTHROPIC_API_KEY?: string
 }
+
+/**
+ * A day's worth of interpretations per sync code. The code is the only thing
+ * guarding this, so a leaked one must not be able to run up a bill.
+ */
+const INTERPRETATIONS_PER_DAY = 100
 
 /** Only these origins may call the sync API. */
 const ALLOWED_ORIGINS = [
@@ -19,7 +28,7 @@ function headers(origin: string | null): Record<string, string> {
   const allowed = origin !== null && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]!
   return {
     'access-control-allow-origin': allowed,
-    'access-control-allow-methods': 'GET, PUT, OPTIONS',
+    'access-control-allow-methods': 'GET, PUT, POST, OPTIONS',
     'access-control-allow-headers': 'content-type, x-week-key',
     'access-control-max-age': '86400',
     'cache-control': 'no-store',
@@ -40,11 +49,50 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(origin) })
 
     const url = new URL(request.url)
-    if (url.pathname !== '/plan') return json({ error: 'not found' }, 404, origin)
+    if (url.pathname !== '/plan' && url.pathname !== '/interpret') {
+      return json({ error: 'not found' }, 404, origin)
+    }
 
     const code = request.headers.get('x-week-key')
     if (code === null || !CODE.test(code)) return json({ error: 'bad sync code' }, 401, origin)
     const key = `plan:${code.toLowerCase()}`
+
+    if (url.pathname === '/interpret') {
+      if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405, origin)
+
+      // Establish who is asking before anything else, so an unknown code learns
+      // nothing about how the server is configured.
+      if ((await env.WEEK.get(key)) === null) return json({ error: 'unknown sync code' }, 403, origin)
+
+      let body: { lines?: unknown; context?: unknown }
+      try {
+        body = (await request.json()) as typeof body
+      } catch {
+        return json({ error: 'invalid json' }, 400, origin)
+      }
+
+      const lines = Array.isArray(body.lines)
+        ? body.lines.filter((l): l is string => typeof l === 'string' && l.trim().length > 0).slice(0, 20)
+        : []
+      if (lines.length === 0) return json({ error: 'nothing to interpret' }, 400, origin)
+
+      if (!env.ANTHROPIC_API_KEY) return json({ error: 'no api key configured' }, 503, origin)
+
+      const today = new Date().toISOString().slice(0, 10)
+      const counter = `ai:${code.toLowerCase()}:${today}`
+      const used = Number.parseInt((await env.WEEK.get(counter)) ?? '0', 10)
+      if (used >= INTERPRETATIONS_PER_DAY) {
+        return json({ error: 'daily limit reached' }, 429, origin)
+      }
+      await env.WEEK.put(counter, String(used + 1), { expirationTtl: 172_800 })
+
+      try {
+        const result = await interpret(env.ANTHROPIC_API_KEY, lines, body.context as Context)
+        return json(result, 200, origin)
+      } catch (error) {
+        return json({ error: error instanceof Error ? error.message : 'interpretation failed' }, 502, origin)
+      }
+    }
 
     if (request.method === 'GET') {
       const stored = await env.WEEK.get(key)

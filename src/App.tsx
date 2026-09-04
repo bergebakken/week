@@ -8,7 +8,7 @@ import { PhoneWeek } from './PhoneWeek'
 import { PromptBar } from './PromptBar'
 import { TodoRail } from './TodoRail'
 import { GHOST_PREFIX, Week } from './Week'
-import { fmtDuration, type Block, type Day } from './model'
+import { fmtClock, fmtDuration, type Block, type Day } from './model'
 import type { ParseResult } from './parse'
 import { nowMinutes, todayIndex, usePlan } from './store'
 import { useMedia } from './useMedia'
@@ -52,7 +52,13 @@ export default function App() {
   const planned = plan.blocks.reduce((sum, b) => sum + (b.end - b.start), 0)
   const selected = selectedId ? plan.blocks.find((b) => b.id === selectedId) ?? null : null
 
-  const handleCommit = useCallback((r: ParseResult) => commit(r.blocks, r.todos), [commit])
+  /** What is already planned, so Claude can resolve "after lunch". */
+  const existing = useMemo(
+    () => plan.blocks.map((b) => ({
+      day: b.day, start: fmtClock(b.start), end: fmtClock(b.end), title: b.title,
+    })),
+    [plan.blocks],
+  )
   const isTodoDone = useCallback(
     (id: string) => plan.todos.find((t) => t.id === id)?.done ?? false,
     [plan.todos],
@@ -114,7 +120,12 @@ export default function App() {
         )}
       </div>
 
-      <PromptBar day={isPhone ? viewDay : today} onPreview={setPreview} onCommit={handleCommit} />
+      <PromptBar
+        day={isPhone ? viewDay : today}
+        onPreview={setPreview}
+        onCommit={commit}
+        ai={sync ? { config: sync, existing } : null}
+      />
 
       {selected && (
         <BlockDetail

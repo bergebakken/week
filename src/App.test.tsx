@@ -105,6 +105,54 @@ describe('the app', () => {
     expect(host.querySelectorAll('.clock svg circle')).toHaveLength(2)
   })
 
+  it('hands the line back, unharmed, when there is no Claude to ask', async () => {
+    await render()
+    const area = await type('gym sometime after lunch')
+    await act(async () => {
+      area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    })
+    expect(area.value).toBe('gym sometime after lunch')
+    expect(host.querySelector('.problem')?.textContent).toContain('turn on sync')
+  })
+
+  it('sends what it cannot read to Claude, and files what comes back', async () => {
+    window.localStorage.setItem('week.sync', JSON.stringify({
+      url: 'https://week-sync.example.workers.dev', code: 'b'.repeat(32),
+    }))
+    const asked: string[] = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = ((url: string, init?: RequestInit) => {
+      const target = String(url)
+      if (target.endsWith('/interpret')) {
+        asked.push(String(init?.body))
+        return Promise.resolve(new Response(JSON.stringify({
+          blocks: [{ day: 0, start: '13:00', end: '14:00', title: 'gym', note: '', category: 'movement', isTodo: false }],
+          todos: [], unreadable: [],
+        })))
+      }
+      // the sync endpoints
+      return Promise.resolve(new Response(init?.method === 'PUT' ? String(init.body) : 'null'))
+    }) as unknown as typeof fetch
+
+    try {
+      await render()
+      const area = await type('gym sometime after lunch')
+      expect(host.querySelector('.res')?.textContent).toContain('Claude will place this')
+
+      await act(async () => {
+        area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+      })
+      await act(async () => { await Promise.resolve() })
+
+      expect(asked).toHaveLength(1)
+      expect(JSON.parse(asked[0]!).lines).toEqual(['gym sometime after lunch'])
+      expect(host.querySelector('.blk:not(.ghost)')?.textContent).toContain('gym')
+      expect(area.value).toBe('')
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
+
   it('stays off the network entirely until sync is set up', async () => {
     const calls: string[] = []
     const realFetch = globalThis.fetch
