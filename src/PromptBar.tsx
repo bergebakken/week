@@ -46,7 +46,7 @@ export function PromptBar({ day, onPreview, onCommit }: Props) {
           ref={area}
           value={text}
           rows={1}
-          spellCheck={false}
+          spellCheck
           placeholder="Monday 8 bike ride 2h, intervals 5x10"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {

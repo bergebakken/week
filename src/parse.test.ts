@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parse } from './parse'
+import { correctTypos, parse } from './parse'
 import { fmtClock, type Day } from './model'
 
 const at = (input: string, day: Day = 0) =>
@@ -207,6 +207,89 @@ describe('one line, many days', () => {
 
   it('leaves a single-day line alone', () => {
     expect(daysOf('gym 1h at 17', 3)).toEqual([3])
+  })
+})
+
+describe('one line, several things', () => {
+  it('splits on "thereafter"', () => {
+    expect(at('20 theater thereafter the birthday party at 22:00')).toEqual([
+      { day: 0, time: '20:00-20:30', title: 'theater', category: 'other' },
+      { day: 0, time: '22:00-22:30', title: 'the birthday party', category: 'rest' },
+    ])
+  })
+
+  it('splits on a comma when both halves carry a time', () => {
+    expect(at('tennis at 10:30, lunch at 12:00').map((b) => b.time))
+      .toEqual(['10:30-11:00', '12:00-12:30'])
+  })
+
+  it('splits on a full stop the same way', () => {
+    expect(at('gym 1h at 17. read from 20 to 21').map((b) => b.time))
+      .toEqual(['17:00-18:00', '20:00-21:00'])
+  })
+
+  it('leaves a decimal alone', () => {
+    expect(at('bike 1.5h from 8, hard')[0]).toMatchObject({ time: '08:00-09:30', note: 'hard' })
+    expect(at('sykkel 1,5t fra 8')[0]?.time).toBe('08:00-09:30')
+  })
+
+  it('keeps "afterwards" as a modifier when nothing follows it but a length', () => {
+    expect(at('bike 2h from 8\nshower afterwards 15 min').map((b) => b.time))
+      .toEqual(['08:00-10:00', '10:00-10:15'])
+  })
+
+  it('treats "afterwards" as a separator when a whole item follows', () => {
+    expect(at('theatre at 20 afterwards the party at 22').map((b) => b.title))
+      .toEqual(['theatre', 'the party'])
+  })
+
+  it('handles the long run-on', () => {
+    const times = at('tennis at 10:30, lunch at 12:00 and before that i am doing my rehabilitation exercises. After lunch read for an 1h from 13 to 14')
+    expect(times.map((b) => b.time)).toEqual(['10:30-11:00', '12:00-12:30', '13:00-14:00'])
+    expect(times[2]?.title).toBe('After lunch read')
+  })
+})
+
+describe('the comma decides between a note and a new item', () => {
+  it('is a note when nothing after it has a time', () => {
+    expect(at('bike ride 2h from 8, intervals 5x10')[0])
+      .toMatchObject({ title: 'bike ride', note: 'intervals 5x10' })
+  })
+
+  it('is a note even on a chained line with no time of its own', () => {
+    const blocks = at('gym 1h at 17\nthen shower, quick one')
+    expect(blocks[1]).toMatchObject({ title: 'shower', note: 'quick one', time: '18:00-18:30' })
+  })
+
+  it('is punctuation when only the second half has a time', () => {
+    expect(at('Its late, so read 30 min before bed at 23:00')).toHaveLength(1)
+    expect(at('meeting with Kari, 2h from 10')[0]).toMatchObject({ title: 'meeting with Kari' })
+  })
+})
+
+describe('typos in the words the parser reacts to', () => {
+  it('still separates two items when "thereafter" is misspelt', () => {
+    expect(at('20 theater therater the birtday party at 22:00').map((b) => b.title))
+      .toEqual(['theater', 'the birtday party'])   // the typo in the title is left as written
+  })
+
+  it('repairs day names and long keywords', () => {
+    expect(correctTypos('mondya')).toBe('monday')
+    expect(correctTypos('wendesday')).toBe('wednesday')
+    expect(correctTypos('beofre')).toBe('before')
+    expect(correctTypos('excpet')).toBe('except')
+    expect(at('gym 1h at 17 on wendesday')[0]?.day).toBe(2)
+  })
+
+  it('leaves ordinary words alone', () => {
+    for (const word of ['the', 'than', 'then', 'theater', 'theatre', 'money', 'expect', 'reading', 'before']) {
+      expect(correctTypos(word), word).toBe(word)
+    }
+    expect(correctTypos('call my son about the party')).toBe('call my son about the party')
+  })
+
+  it('does not touch words in a title that resemble nothing', () => {
+    expect(at('birtday party at 20')[0]?.title).toBe('birtday party')
   })
 })
 

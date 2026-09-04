@@ -257,6 +257,71 @@ interface SegmentContext {
 }
 
 
+interface Times {
+  start: number | null
+  end: number | null
+  duration: number | null
+  /** What is left once every time expression has been cut out. */
+  rest: string
+}
+
+/** Pulls the clock out of a piece of text, leaving the words behind. */
+function readTimes(text: string): Times {
+  const sc = new Scanner(text)
+  let start: number | null = null
+  let end: number | null = null
+  let duration: number | null = null
+
+  // "from 8 to 9" / "8-9" / "8 to 9"
+  const range =
+    sc.take(String.raw`\b(?:from|fra|kl\.?|klokka|klokken)\s*` + CLOCK + String.raw`\s*` + DASH + String.raw`\s*` + CLOCK + String.raw`\b`,
+      (m) => { const a = readClock(m[1], m[2]); const b = readClock(m[3], m[4]); return a !== null && b !== null ? [a, b] as const : null }) ??
+    sc.take(String.raw`\b` + CLOCK + String.raw`\s*` + DASH + String.raw`\s*` + CLOCK + String.raw`\b`,
+      (m) => { const a = readClock(m[1], m[2]); const b = readClock(m[3], m[4]); return a !== null && b !== null ? [a, b] as const : null })
+  if (range) { start = range[0]; end = range[1] }
+
+  // "before bed at 23:00" / "before 23:00" — the clock is an end.
+  if (end === null) {
+    end = sc.take(String.raw`\bbefore\s+(?:[a-zæøå]+\s+){0,1}(?:at|kl\.?|klokka|klokken)?\s*` + CLOCK + String.raw`\b`,
+      (m) => readClock(m[1], m[2]))
+  }
+
+  // "until 17"
+  if (end === null) {
+    end = sc.take(String.raw`\b(?:until|till|til|fram\s+til|frem\s+til|to)\s*` + CLOCK + String.raw`\b`,
+      (m) => readClock(m[1], m[2]))
+  }
+
+  // "2h", "1.5 hours", "1h30", "2t"
+  duration = sc.take(String.raw`\b(?:(?:for|i)\s+)?(?:(?:an?|en|ei|et)\s+)?(\d+(?:[.,]\d+)?)\s*(?:h|hr|hrs|hours?|timer|time[rn]?|t)(?![a-zæøå])(?:\s*(\d{1,2})\s*(?:m|min|mins|minutes?|minutt(?:er)?)?\b)?`,
+    (m) => (m[1] === undefined ? null : readDuration(m[1], true, m[2])))
+
+  // "30 min", "45 minutes"
+  if (duration === null) {
+    duration = sc.take(String.raw`\b(?:(?:for|i)\s+)?(?:(?:an?|en|ei|et)\s+)?(\d+)\s*(?:m|min|mins|minute[rs]?|minutes|minutt(?:er)?)\b`,
+      (m) => (m[1] === undefined ? null : readDuration(m[1], false)))
+  }
+
+  // "at 11", "from 8", "kl 8"
+  if (start === null) {
+    start = sc.take(String.raw`\b(?:at|from|fra|kl\.?|klokka|klokken)\s*` + CLOCK + String.raw`\b`,
+      (m) => readClock(m[1], m[2]))
+  }
+
+  // A bare number, only when nothing else supplied a start.
+  if (start === null) {
+    start = sc.take(String.raw`(?:^|\s)` + CLOCK + String.raw`(?=\s|$)`, (m) => readClock(m[1], m[2]))
+  }
+
+  return { start, end, duration, rest: sc.remainder() }
+}
+
+/** Does this read like something that could be scheduled on its own? */
+function hasTime(text: string): boolean {
+  const found = readTimes(text)
+  return found.start !== null || found.end !== null || found.duration !== null
+}
+
 function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   let text = raw.trim()
   if (!text) return { kind: 'unparsed', raw, reason: 'empty' }
@@ -290,55 +355,16 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   const commaNote = /,\s*(.+)$/.exec(text)
   if (dashNote?.[1]) { note = dashNote[1].trim(); text = text.slice(0, dashNote.index) }
   else if (parenNote?.[1]) { note = parenNote[1].trim(); text = text.slice(0, parenNote.index) }
-  else if (commaNote?.[1] && /\d/.test(text.slice(0, commaNote.index))) {
+  else if (commaNote?.[1] && !hasTime(commaNote[1])) {
+    // Anything after the comma that has a time of its own was already split off
+    // as a separate item, so whatever reaches here is detail rather than a plan.
     note = commaNote[1].trim(); text = text.slice(0, commaNote.index)
   }
 
-  const sc = new Scanner(text)
-  let start: number | null = null
-  let end: number | null = null
-  let duration: number | null = null
-
-  // "from 8 to 9" / "8-9" / "8 to 9"
-  const range =
-    sc.take(String.raw`\b(?:from|fra|kl\.?|klokka|klokken)\s*` + CLOCK + String.raw`\s*` + DASH + String.raw`\s*` + CLOCK + String.raw`\b`,
-      (m) => { const a = readClock(m[1], m[2]); const b = readClock(m[3], m[4]); return a !== null && b !== null ? [a, b] as const : null }) ??
-    sc.take(String.raw`\b` + CLOCK + String.raw`\s*` + DASH + String.raw`\s*` + CLOCK + String.raw`\b`,
-      (m) => { const a = readClock(m[1], m[2]); const b = readClock(m[3], m[4]); return a !== null && b !== null ? [a, b] as const : null })
-  if (range) { start = range[0]; end = range[1] }
-
-  // "before bed at 23:00" / "before 23:00" — the clock is an end.
-  if (end === null) {
-    end = sc.take(String.raw`\bbefore\s+(?:[a-zæøå]+\s+){0,1}(?:at|kl\.?|klokka|klokken)?\s*` + CLOCK + String.raw`\b`,
-      (m) => readClock(m[1], m[2]))
-  }
-
-  // "until 17"
-  if (end === null) {
-    end = sc.take(String.raw`\b(?:until|till|til|fram\s+til|frem\s+til|to)\s*` + CLOCK + String.raw`\b`,
-      (m) => readClock(m[1], m[2]))
-  }
-
-  // "2h", "1.5 hours", "1h30", "2t"
-  duration = sc.take(String.raw`\b(?:(?:for|i)\s+)?(\d+(?:[.,]\d+)?)\s*(?:h|hr|hrs|hours?|timer|time[rn]?|t)(?![a-zæøå])(?:\s*(\d{1,2})\s*(?:m|min|mins|minutes?|minutt(?:er)?)?\b)?`,
-    (m) => (m[1] === undefined ? null : readDuration(m[1], true, m[2])))
-
-  // "30 min", "45 minutes"
-  if (duration === null) {
-    duration = sc.take(String.raw`\b(?:(?:for|i)\s+)?(\d+)\s*(?:m|min|mins|minute[rs]?|minutes|minutt(?:er)?)\b`,
-      (m) => (m[1] === undefined ? null : readDuration(m[1], false)))
-  }
-
-  // "at 11", "from 8", "kl 8"
-  if (start === null) {
-    start = sc.take(String.raw`\b(?:at|from|fra|kl\.?|klokka|klokken)\s*` + CLOCK + String.raw`\b`,
-      (m) => readClock(m[1], m[2]))
-  }
-
-  // A bare number, only when nothing else supplied a start.
-  if (start === null) {
-    start = sc.take(String.raw`(?:^|\s)` + CLOCK + String.raw`(?=\s|$)`, (m) => readClock(m[1], m[2]))
-  }
+  const times = readTimes(text)
+  let start = times.start
+  let end = times.end
+  const duration = times.duration
 
   // Resolve whatever combination we ended up with.
   if (start !== null && end === null) {
@@ -348,7 +374,7 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   } else if (start === null && end === null) {
     if (ctx.cursor === null) {
       if (isTodo) {
-        const text2 = tidy(sc.remainder())
+        const text2 = times.rest
         if (!text2) return { kind: 'unparsed', raw, reason: 'nothing to add' }
         return { kind: 'todo', raw, text: text2, note }
       }
@@ -356,7 +382,7 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
     }
     if (duration === null && !chained) {
       if (isTodo) {
-        const text2 = tidy(sc.remainder())
+        const text2 = times.rest
         if (!text2) return { kind: 'unparsed', raw, reason: 'nothing to add' }
         return { kind: 'todo', raw, text: text2, note }
       }
@@ -371,7 +397,7 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   if (end <= start) end = start + DEFAULT_DURATION
   if (end > 24 * 60) end = 24 * 60
 
-  const title = tidy(sc.remainder())
+  const title = times.rest
   if (!title) return { kind: 'unparsed', raw, reason: 'no title' }
 
   const from = start
@@ -385,8 +411,132 @@ function parseSegment(raw: string, ctx: SegmentContext): ParsedSegment {
   }
 }
 
-/** Splits a line into items on "then", which also chains each item to the previous end. */
-const SEPARATOR = /(?:,\s*)?\b(?:then|and\s+then|så|deretter)\b\s*/gi
+/**
+ * Only long keywords are worth correcting a typo into. Short ones are dangerous:
+ * "the" is one edit from "then" and "than" is one from "then", so fixing those
+ * would break more lines than it repaired.
+ */
+const FUZZY_WORDS: string[] = [
+  ...Object.keys(DAY_WORDS).filter((w) => w.length >= 6),
+  'thereafter', 'afterwards', 'afterward', 'weekdays', 'weekend', 'weekends',
+  'minutes', 'minutt', 'minutter', 'deretter', 'everyday', 'except', 'before',
+  'until', 'hours', 'unntatt', 'hverdager', 'ukedager',
+].filter((w) => w.length >= 6)
+
+const KNOWN_WORDS = new Set(FUZZY_WORDS)
+
+/** Damerau-Levenshtein, so a swapped pair of letters counts as one mistake. */
+function editDistance(a: string, b: string): number {
+  const rows: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0))
+  for (let i = 0; i <= a.length; i++) rows[i]![0] = i
+  for (let j = 0; j <= b.length; j++) rows[0]![j] = j
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      let best = Math.min(rows[i - 1]![j]! + 1, rows[i]![j - 1]! + 1, rows[i - 1]![j - 1]! + cost)
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        best = Math.min(best, rows[i - 2]![j - 2]! + 1)
+      }
+      rows[i]![j] = best
+    }
+  }
+  return rows[a.length]![b.length]!
+}
+
+/** One mistake in a short keyword, two in a long one. */
+const allowance = (word: string): number => (word.length >= 9 ? 2 : 1)
+
+/** Repairs misspelt keywords so "therater" still separates two items. */
+export function correctTypos(line: string): string {
+  return line.replace(/[a-zæøå]{4,}/gi, (word) => {
+    const lower = word.toLowerCase()
+    if (KNOWN_WORDS.has(lower) || DAY_WORDS[lower] !== undefined) return word
+
+    let best: string | null = null
+    let bestDistance = Number.POSITIVE_INFINITY
+    for (const candidate of FUZZY_WORDS) {
+      const allowed = allowance(candidate)
+      if (Math.abs(candidate.length - lower.length) > allowed) continue
+      const distance = editDistance(lower, candidate)
+      if (distance <= allowed && distance < bestDistance) {
+        best = candidate
+        bestDistance = distance
+      }
+    }
+    return best ?? word
+  })
+}
+
+/** Words that always start a new item, chained to the end of the previous one. */
+const SEPARATOR = /(?:,\s*)?\b(?:then|and\s+then|thereafter|after\s+which|så|deretter)\b\s*/gi
+
+/**
+ * "afterwards" is ambiguous: in "shower afterwards 15 min" it modifies the item,
+ * in "theatre afterwards the party at 22" it starts a new one.
+ */
+const CHAIN_MARKER = /\b(?:afterwards?|after\s+that|etterpå|etter\s+det)\b/i
+
+export interface Item {
+  text: string
+  chained: boolean
+}
+
+/** True when the text could stand on its own: it has both a time and something to call it. */
+function isWholeItem(text: string): boolean {
+  const found = readTimes(text)
+  const timed = found.start !== null || found.end !== null || found.duration !== null
+  return timed && found.rest.trim().length > 0
+}
+
+function splitOnMarker(item: Item): Item[] {
+  const found = CHAIN_MARKER.exec(item.text)
+  if (!found) return [item]
+  const left = item.text.slice(0, found.index).trim()
+  const right = item.text.slice(found.index + found[0].length).trim()
+  // Only a separator when what follows is a whole item in its own right.
+  if (!left || !right || !isWholeItem(right)) return [item]
+  return [{ text: left, chained: item.chained }, ...splitOnMarker({ text: right, chained: true })]
+}
+
+/**
+ * A comma or full stop separates two items when both sides carry a time.
+ * With a time on only one side it is punctuation, not a boundary.
+ */
+function splitOnPunctuation(item: Item): Item[] {
+  const out: Item[] = []
+  let rest = item.text
+  let chained = item.chained
+
+  for (;;) {
+    let at = -1
+    for (let i = 1; i < rest.length - 1; i++) {
+      const mark = rest[i]
+      if (mark !== ',' && mark !== '.') continue
+      // Leave decimals alone: 1.5h and the Norwegian 1,5t.
+      if (/\d/.test(rest[i - 1] ?? '') && /\d/.test(rest[i + 1] ?? '')) continue
+      if (hasTime(rest.slice(0, i)) && hasTime(rest.slice(i + 1))) { at = i; break }
+    }
+    if (at < 0) break
+    out.push({ text: rest.slice(0, at), chained })
+    rest = rest.slice(at + 1)
+    chained = false
+  }
+
+  out.push({ text: rest, chained })
+  return out
+}
+
+/** Breaks one written line into the separate things it actually describes. */
+export function splitItems(line: string): Item[] {
+  SEPARATOR.lastIndex = 0
+  return line
+    .split(SEPARATOR)
+    .map((text, index) => ({ text, chained: index > 0 }))
+    .flatMap(splitOnMarker)
+    .flatMap(splitOnPunctuation)
+    .filter((item) => item.text.trim().length > 0)
+}
 
 /** #todo splits a line: everything after the tag is the task, not what came before. */
 const TODO_TAG = /#(?:todo|task|oppgave)\b/gi
@@ -396,8 +546,9 @@ export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
   const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], days: [start] }
   const ctx: SegmentContext = { days: [start], cursor: null, chained: false, forceTodo: false }
 
-  for (const line of input.split(/\r?\n/)) {
-    if (!line.trim()) continue
+  for (const written of input.split(/\r?\n/)) {
+    if (!written.trim()) continue
+    const line = correctTypos(written)
 
     TODO_TAG.lastIndex = 0
     const chunks = line.split(TODO_TAG)
@@ -406,16 +557,10 @@ export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
     if (!chunk.trim()) continue
     ctx.forceTodo = chunkIndex > 0
 
-    SEPARATOR.lastIndex = 0
-    const pieces = chunk.split(SEPARATOR)
-    let first = true
+    for (const item of splitItems(chunk)) {
+      ctx.chained = item.chained
 
-    for (const piece of pieces) {
-      if (!piece.trim()) { first = false; continue }
-      ctx.chained = !first
-      first = false
-
-      const seg = parseSegment(piece, ctx)
+      const seg = parseSegment(item.text, ctx)
       result.segments.push(seg)
 
       if (seg.kind === 'day') {
