@@ -47,8 +47,25 @@ export const COMMON_WORDS: string[] = [
   'gaming', 'music', 'guitar', 'piano', 'podcast', 'series', 'episode',
   'soving', 'dusje', 'hvile', 'lesing', 'musikk',
 
+  // Norwegian words a frequency-ranked English list would happily mangle:
+  // "reise" is one edit from "raise", "middag" one from "midday".
+  'reise', 'reiser', 'hytte', 'hytta', 'ferie', 'helga', 'dagen', 'uken', 'uka',
+  'maaned', 'måned', 'timer', 'minutt', 'morgen', 'kveld', 'natta', 'natten',
+  'trene', 'trener', 'jobbe', 'jobben', 'skolen', 'venner', 'familie', 'soster',
+  'søster', 'broren', 'mamma', 'pappa', 'barna', 'huset', 'hjemme', 'butikken',
+  'handle', 'vaske', 'rydde', 'spise', 'drikke', 'sove', 'vaakne', 'våkne',
+  'dusje', 'lese', 'skrive', 'hoere', 'høre', 'snakke', 'ringe', 'moete',
+  'bussen', 'toget', 'bilen', 'sykkelen', 'turen', 'fjellet', 'skogen',
+  'stranda', 'sjoeen', 'sjøen', 'byen', 'sentrum', 'teater', 'bryllup',
+  'gaver', 'penger', 'regning', 'betale', 'banken', 'posten', 'pakke',
+  'klaer', 'klær', 'maten', 'kake', 'bake', 'grille', 'fisken', 'broed', 'brød',
+  'melk', 'osten', 'butikk', 'legen', 'apotek', 'ferien', 'sommer', 'vinter',
+  'hoest', 'høst', 'vaaren', 'våren', 'snoe', 'snø', 'regner', 'sola',
+  'fjord', 'fjorden', 'hytter', 'skitur', 'padel', 'sushi', 'pizza',
+
   // small connective words that show up in a plan
   'before', 'after', 'about', 'until', 'while', 'during', 'between', 'around',
+  'sometime', 'anytime', 'maybe', 'perhaps', 'roughly', 'ideally', 'hopefully',
   'finish', 'finished', 'start', 'starting', 'continue', 'prepare', 'preparing',
   'planning', 'practice', 'practise', 'session', 'quick', 'short', 'long',
 ]

@@ -1,4 +1,5 @@
 import { clockToMinutes, type Category, type Day } from './model'
+import { FREQUENT_WORDS } from './frequent'
 import { COMMON_WORDS } from './words'
 
 /** A block the parser produced but that has not been given an id or committed yet. */
@@ -448,9 +449,14 @@ function editDistance(a: string, b: string): number {
 }
 
 /** One mistake in a short word, two in a long one. */
-const allowance = (word: string): number => (word.length >= 9 ? 2 : 1)
+const allowance = (word: string): number => (word.length >= 8 ? 2 : 1)
 
-const DICTIONARY = [...new Set(COMMON_WORDS.map((w) => w.toLowerCase()))]
+/**
+ * Two jobs at once. Every entry is a word we will never "fix", which is what
+ * protects Norwegian words and anything domain-specific; and every entry is
+ * somewhere a typo may be corrected towards.
+ */
+const DICTIONARY = [...new Set([...COMMON_WORDS, ...FREQUENT_WORDS].map((w) => w.toLowerCase()))]
 const SPELLED_RIGHT = new Set([...DICTIONARY, ...KNOWN_WORDS, ...Object.keys(DAY_WORDS)])
 
 export interface Correction {
@@ -475,21 +481,31 @@ function nearestKeyword(word: string): string | null {
 }
 
 /**
- * An ordinary word is only corrected when exactly one dictionary word is close
- * enough. Two candidates means we would be guessing, and a wrong "fix" reads
- * worse than the typo did.
+ * Corrects to the single closest dictionary word. A genuine tie - two words the
+ * same small distance away - is left alone, because picking one would be a
+ * guess and a wrong "fix" reads worse than the typo did.
  */
 function onlyPlausibleWord(word: string): string | null {
   if (word.length < 5) return null
   const allowed = allowance(word)
-  let found: string | null = null
+  let best: string | null = null
+  let bestDistance = allowed + 1
+  let tied = false
+
   for (const candidate of DICTIONARY) {
     if (Math.abs(candidate.length - word.length) > allowed) continue
-    if (editDistance(word, candidate) > allowed) continue
-    if (found !== null) return null
-    found = candidate
+    const distance = editDistance(word, candidate)
+    if (distance > allowed) continue
+    if (distance < bestDistance) {
+      best = candidate
+      bestDistance = distance
+      tied = false
+    } else if (distance === bestDistance) {
+      tied = true
+    }
   }
-  return found
+
+  return tied ? null : best
 }
 
 function matchCase(original: string, fixed: string): string {
@@ -504,16 +520,15 @@ function matchCase(original: string, fixed: string): string {
  * changes is reported so the prompt can show it before you commit.
  */
 export function correctTypos(line: string, into?: Correction[]): string {
-  return line.replace(/[a-zæøåA-ZÆØÅ]{4,}/g, (word, offset: number) => {
+  return line.replace(/[a-zæøåA-ZÆØÅ]{4,}/g, (word: string) => {
     const lower = word.toLowerCase()
     if (SPELLED_RIGHT.has(lower)) return word
 
-    // A capital letter mid-line usually means a name, which we must not touch.
-    const opensLine = line.slice(0, offset).trim().length === 0
+    // A capital letter usually means a name. Keywords are still repaired -
+    // "Mondya" should become "Monday" - but a capitalised word is never pulled
+    // towards an ordinary dictionary word, which is what keeps Jonas off Jones.
     const capitalised = word[0] !== word[0]?.toLowerCase()
-    if (capitalised && !opensLine) return word
-
-    const fixed = nearestKeyword(lower) ?? onlyPlausibleWord(lower)
+    const fixed = nearestKeyword(lower) ?? (capitalised ? null : onlyPlausibleWord(lower))
     if (fixed === null) return word
 
     const replacement = matchCase(word, fixed)

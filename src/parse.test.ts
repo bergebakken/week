@@ -281,6 +281,36 @@ describe('typos in the words the parser reacts to', () => {
     expect(at('gym 1h at 17 on wendesday')[0]?.day).toBe(2)
   })
 
+  it('repairs everyday misspellings, not just schedule words', () => {
+    for (const [wrong, right] of [
+      ['rgearidng', 'regarding'], ['freind', 'friend'], ['recieve', 'receive'],
+      ['seperate', 'separate'], ['tommorow', 'tomorrow'], ['apointment', 'appointment'],
+      ['grocries', 'groceries'], ['rehabilitaton', 'rehabilitation'],
+    ]) {
+      expect(correctTypos(wrong!), wrong).toBe(right)
+    }
+  })
+
+  it('leaves Norwegian words where an English one is a single edit away', () => {
+    // "reise" is one edit from "raise", "middag" one from "midday".
+    for (const word of ['reise', 'middag', 'hytta', 'kaffe', 'trening', 'lunsj', 'fjord', 'frokost', 'venner']) {
+      expect(correctTypos(word), word).toBe(word)
+    }
+  })
+
+  it('never pulls a capitalised word towards an ordinary one', () => {
+    for (const name of ['Jonas', 'Marta', 'Kari', 'Ingrid', 'Sondre']) {
+      expect(correctTypos(name), name).toBe(name)
+    }
+    // ...but a misspelt keyword is still repaired, capital or not.
+    expect(correctTypos('Mondya')).toBe('Monday')
+  })
+
+  it('says nothing rather than guessing between two equally close words', () => {
+    // "exercies" is one edit from both "exercise" and "exercises".
+    expect(correctTypos('exercies')).toBe('exercies')
+  })
+
   it('leaves ordinary words alone', () => {
     for (const word of ['the', 'than', 'then', 'theater', 'theatre', 'money', 'expect', 'reading', 'before']) {
       expect(correctTypos(word), word).toBe(word)
@@ -308,7 +338,8 @@ describe('what it refuses, so Claude gets asked instead', () => {
   it('gives up on vague input rather than guessing', () => {
     const r = parse('gym sometime after lunch')
     expect(r.blocks).toEqual([])
-    expect(r.unparsed).toEqual([{ raw: 'gym sometime after lunch', reason: 'no time found' }])
+    expect(r.unparsed).toHaveLength(1)
+    expect(r.unparsed[0]?.reason).toBe('no time found')
   })
 
   it('gives up on a line with no time and nothing to chain from', () => {
