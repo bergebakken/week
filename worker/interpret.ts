@@ -47,11 +47,18 @@ Rules:
 - With no length given, use a sensible one for the activity rather than a fixed
   default: a shower is 15 minutes, a gym session an hour, a film two.
 - Keep the person's own words in the title. Do not tidy "gym" into "Gymnasium".
-- Split one sentence into several blocks when it describes several things.
-- If a line genuinely has nothing to place it by, put it in unreadable. Do not
-  invent a time. Being told you could not read it is far better than a block
-  landing at a time nobody chose.
-- A task with no sensible time goes in todos rather than on the week.`
+- Split one sentence into several blocks when it describes several things, and
+  put them in the order they would actually happen. Someone wakes up before
+  they swim, and showers after exercising, not before.
+- A rough time of day is enough to place something. "Tuesday morning" is a
+  Tuesday at nine; "before bed" is late evening. Place it and let them drag it.
+  Reserve unreadable for a line with no hint of when at all - and never invent
+  a time for one of those, because a block nobody chose is worse than being
+  told it could not be read.
+- A task with no sensible time at all goes in todos rather than on the week.
+- What is already planned is background, there so you can anchor against it.
+  Return only what the new lines describe. Never repeat a block that is already
+  there.`
 
 function describe(context: Context, dayNames: string[]): string {
   if (context.existing.length === 0) return 'Nothing is planned yet this week.'
@@ -59,10 +66,23 @@ function describe(context: Context, dayNames: string[]): string {
     .slice()
     .sort((a, b) => a.day - b.day || a.start.localeCompare(b.start))
     .map((b) => `  ${dayNames[b.day]} ${b.start}-${b.end} ${b.title}`)
-  return `Already planned:\n${lines.join('\n')}`
+  return `Already planned (background only - do not return these):\n${lines.join('\n')}`
 }
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+const identity = (b: { day: number; start: string; end: string; title: string }) =>
+  `${b.day}|${b.start}|${b.end}|${b.title.trim().toLowerCase()}`
+
+/**
+ * The model is told the existing plan is background, but it once handed the
+ * whole week back as new blocks. The cost of that going unnoticed is every
+ * block duplicated, so it is enforced here rather than merely asked for.
+ */
+export function withoutEcho(result: Interpretation, context: Context): Interpretation {
+  const already = new Set(context.existing.map(identity))
+  return { ...result, blocks: result.blocks.filter((b) => !already.has(identity(b))) }
+}
 
 /**
  * Pulling a time out of one sentence is not deep work, and someone is waiting
@@ -110,5 +130,6 @@ export async function interpret(
   if (response.parsed_output === null) {
     throw new Error('could not read the reply')
   }
-  return response.parsed_output
+
+  return withoutEcho(response.parsed_output, context)
 }

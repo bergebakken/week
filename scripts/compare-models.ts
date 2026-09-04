@@ -2,11 +2,13 @@
  * Runs the same lines through several models so the choice is made on evidence.
  * Uses the worker's real prompt and schema, so what you measure is what ships.
  *
- *   ANTHROPIC_API_KEY=sk-... node scripts/compare-models.ts
+ *   ANTHROPIC_API_KEY=sk-... node scripts/compare-models.ts [model ...]
  */
 import { interpret } from '../worker/interpret.ts'
 
-const MODELS = ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5']
+const MODELS = process.argv.slice(2).length > 0
+  ? process.argv.slice(2)
+  : ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5']
 
 /** Lines the local parser gives up on - the only ones that ever reach a model. */
 const CASES: { line: string; want: string }[] = [

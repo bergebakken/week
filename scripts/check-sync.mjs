@@ -72,14 +72,22 @@ check('refuses a sync code that has no plan', (await ask(stranger, { lines: ['x'
 check('refuses GET on interpret', (await fetch(`${ROOT}/interpret`, { method: 'GET', headers: { origin: ORIGIN, 'x-week-key': code } })).status, 405)
 check('refuses an empty request', (await ask(code, { lines: [], context: { day: 0, existing: [] } })).status, 400)
 
-r = await ask(code, { lines: ['gym sometime after lunch'], context: { day: 0, existing: [] } })
+const existing = [
+  { day: 0, start: '08:00', end: '11:00', title: 'school' },
+  { day: 0, start: '12:00', end: '12:30', title: 'lunch' },
+]
+r = await ask(code, { lines: ['gym sometime after lunch'], context: { day: 0, existing } })
 const interpreted = await r.json()
+
 if (r.status === 503) {
-  console.log('  SKIP  interpretation itself - no ANTHROPIC_API_KEY set on the worker yet')
+  console.log('  SKIP  interpretation - no ANTHROPIC_API_KEY set on the worker yet')
 } else if (r.status === 200) {
-  const placed = Array.isArray(interpreted.blocks) && interpreted.blocks.length > 0
-  check('places a vague line', placed || (interpreted.unreadable ?? []).length > 0, true)
-  console.log('        ->', JSON.stringify(interpreted.blocks ?? []).slice(0, 160))
+  const blocks = interpreted.blocks ?? []
+  check('places a line the parser cannot read', blocks.length, 1)
+  check('anchors it after the existing lunch', (blocks[0]?.start ?? '') >= '12:30', true)
+  check('does not hand the existing plan back as new blocks',
+    blocks.some(b => ['school', 'lunch'].includes(String(b.title).toLowerCase())), false)
+  console.log('        ->', blocks.map(b => `${b.start}-${b.end} ${b.title}`).join(', '))
 } else {
   check(`interpretation returned ${r.status}: ${interpreted.error}`, false, true)
 }
