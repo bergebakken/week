@@ -1,4 +1,5 @@
 import { clockToMinutes, type Category, type Day } from './model'
+import { COMMON_WORDS } from './words'
 
 /** A block the parser produced but that has not been given an id or committed yet. */
 export interface DraftBlock {
@@ -26,6 +27,8 @@ export interface ParseResult {
   unparsed: { raw: string; reason: string }[]
   /** Days the next line would land on, so the caller can show it. */
   days: Day[]
+  /** Spellings that were repaired, so the prompt can show what changed. */
+  corrections: Correction[]
 }
 
 /** A start time with no stated length gets this many minutes. */
@@ -444,27 +447,78 @@ function editDistance(a: string, b: string): number {
   return rows[a.length]![b.length]!
 }
 
-/** One mistake in a short keyword, two in a long one. */
+/** One mistake in a short word, two in a long one. */
 const allowance = (word: string): number => (word.length >= 9 ? 2 : 1)
 
-/** Repairs misspelt keywords so "therater" still separates two items. */
-export function correctTypos(line: string): string {
-  return line.replace(/[a-zæøå]{4,}/gi, (word) => {
-    const lower = word.toLowerCase()
-    if (KNOWN_WORDS.has(lower) || DAY_WORDS[lower] !== undefined) return word
+const DICTIONARY = [...new Set(COMMON_WORDS.map((w) => w.toLowerCase()))]
+const SPELLED_RIGHT = new Set([...DICTIONARY, ...KNOWN_WORDS, ...Object.keys(DAY_WORDS)])
 
-    let best: string | null = null
-    let bestDistance = Number.POSITIVE_INFINITY
-    for (const candidate of FUZZY_WORDS) {
-      const allowed = allowance(candidate)
-      if (Math.abs(candidate.length - lower.length) > allowed) continue
-      const distance = editDistance(lower, candidate)
-      if (distance <= allowed && distance < bestDistance) {
-        best = candidate
-        bestDistance = distance
-      }
+export interface Correction {
+  from: string
+  to: string
+}
+
+/** Closest keyword, if the word is near enough to one. */
+function nearestKeyword(word: string): string | null {
+  let best: string | null = null
+  let bestDistance = Number.POSITIVE_INFINITY
+  for (const candidate of FUZZY_WORDS) {
+    const allowed = allowance(candidate)
+    if (Math.abs(candidate.length - word.length) > allowed) continue
+    const distance = editDistance(word, candidate)
+    if (distance <= allowed && distance < bestDistance) {
+      best = candidate
+      bestDistance = distance
     }
-    return best ?? word
+  }
+  return best
+}
+
+/**
+ * An ordinary word is only corrected when exactly one dictionary word is close
+ * enough. Two candidates means we would be guessing, and a wrong "fix" reads
+ * worse than the typo did.
+ */
+function onlyPlausibleWord(word: string): string | null {
+  if (word.length < 5) return null
+  const allowed = allowance(word)
+  let found: string | null = null
+  for (const candidate of DICTIONARY) {
+    if (Math.abs(candidate.length - word.length) > allowed) continue
+    if (editDistance(word, candidate) > allowed) continue
+    if (found !== null) return null
+    found = candidate
+  }
+  return found
+}
+
+function matchCase(original: string, fixed: string): string {
+  return original[0] === original[0]?.toUpperCase() && original[0] !== original[0]?.toLowerCase()
+    ? fixed[0]!.toUpperCase() + fixed.slice(1)
+    : fixed
+}
+
+/**
+ * Repairs misspellings: keywords, so "therater" still separates two items, and
+ * ordinary words, so the block reads the way it was meant to. Anything it
+ * changes is reported so the prompt can show it before you commit.
+ */
+export function correctTypos(line: string, into?: Correction[]): string {
+  return line.replace(/[a-zæøåA-ZÆØÅ]{4,}/g, (word, offset: number) => {
+    const lower = word.toLowerCase()
+    if (SPELLED_RIGHT.has(lower)) return word
+
+    // A capital letter mid-line usually means a name, which we must not touch.
+    const opensLine = line.slice(0, offset).trim().length === 0
+    const capitalised = word[0] !== word[0]?.toLowerCase()
+    if (capitalised && !opensLine) return word
+
+    const fixed = nearestKeyword(lower) ?? onlyPlausibleWord(lower)
+    if (fixed === null) return word
+
+    const replacement = matchCase(word, fixed)
+    into?.push({ from: word, to: replacement })
+    return replacement
   })
 }
 
@@ -543,12 +597,12 @@ const TODO_TAG = /#(?:todo|task|oppgave)\b/gi
 
 export function parse(input: string, opts: { day?: Day } = {}): ParseResult {
   const start: Day = opts.day ?? 0
-  const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], days: [start] }
+  const result: ParseResult = { segments: [], blocks: [], todos: [], unparsed: [], days: [start], corrections: [] }
   const ctx: SegmentContext = { days: [start], cursor: null, chained: false, forceTodo: false }
 
   for (const written of input.split(/\r?\n/)) {
     if (!written.trim()) continue
-    const line = correctTypos(written)
+    const line = correctTypos(written, result.corrections)
 
     TODO_TAG.lastIndex = 0
     const chunks = line.split(TODO_TAG)

@@ -156,6 +156,23 @@ describe('the app', () => {
     expect(card?.querySelector<HTMLButtonElement>('.primary')?.disabled).toBe(false)
   })
 
+  it('shows a spelling fix before committing, and files the corrected wording', async () => {
+    await render()
+    const area = await type('birtday party at 20')
+    expect(host.querySelector('.fixes')?.textContent).toContain('birtday → birthday')
+
+    await act(async () => {
+      area.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    })
+    expect(host.querySelector('.blk:not(.ghost)')?.textContent).toContain('birthday party')
+  })
+
+  it('says nothing when the spelling is already fine', async () => {
+    await render()
+    await type('gym 1h at 17')
+    expect(host.querySelector('.fixes')).toBeNull()
+  })
+
   it('shows a quote of the day with its author', async () => {
     await render()
     const text = host.querySelector('.quote-text')?.textContent ?? ''

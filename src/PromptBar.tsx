@@ -47,6 +47,9 @@ export function PromptBar({ day, onPreview, onCommit }: Props) {
           value={text}
           rows={1}
           spellCheck
+          autoCorrect="on"
+          autoCapitalize="none"
+          autoComplete="off"
           placeholder="Monday 8 bike ride 2h, intervals 5x10"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -82,7 +85,14 @@ export function PromptBar({ day, onPreview, onCommit }: Props) {
       </div>
 
       <div className="hints">
-        <span>RETURN TO ADD · SHIFT+RETURN FOR A NEW LINE · #TODO FOR A TASK</span>
+        {result && result.corrections.length > 0 ? (
+          <span className="fixes">
+            {result.corrections.slice(0, 3).map((c) => `${c.from} → ${c.to}`).join('   ')}
+            {result.corrections.length > 3 && `   +${result.corrections.length - 3}`}
+          </span>
+        ) : (
+          <span>RETURN TO ADD · SHIFT+RETURN FOR A NEW LINE · #TODO FOR A TASK</span>
+        )}
         <span>
           {added > 0 && `${added} READY`}
           {added > 0 && unread > 0 && ' · '}

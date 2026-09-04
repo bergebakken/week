@@ -325,3 +325,5 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 [data-sync='error'] { color: #c79c9c; }
 .card .row .ghost-btn { flex: 0 0 auto; }
+
+.hints .fixes { color: var(--accent-dim); letter-spacing: 0.06em; }

@@ -270,7 +270,7 @@ describe('the comma decides between a note and a new item', () => {
 describe('typos in the words the parser reacts to', () => {
   it('still separates two items when "thereafter" is misspelt', () => {
     expect(at('20 theater therater the birtday party at 22:00').map((b) => b.title))
-      .toEqual(['theater', 'the birtday party'])   // the typo in the title is left as written
+      .toEqual(['theater', 'the birthday party'])
   })
 
   it('repairs day names and long keywords', () => {
@@ -288,8 +288,19 @@ describe('typos in the words the parser reacts to', () => {
     expect(correctTypos('call my son about the party')).toBe('call my son about the party')
   })
 
-  it('does not touch words in a title that resemble nothing', () => {
-    expect(at('birtday party at 20')[0]?.title).toBe('birtday party')
+  it('fixes an ordinary word in a title too', () => {
+    expect(at('birtday party at 20')[0]?.title).toBe('birthday party')
+    expect(at('rehabilitaton exercises at 9')[0]?.title).toBe('rehabilitation exercises')
+  })
+
+  it('reports what it changed', () => {
+    expect(parse('birtday party at 20').corrections).toEqual([{ from: 'birtday', to: 'birthday' }])
+    expect(parse('gym 1h at 17').corrections).toEqual([])
+  })
+
+  it('leaves a name alone even when it is close to a real word', () => {
+    expect(at('dinner with Marta at 19')[0]?.title).toBe('dinner with Marta')
+    expect(at('call Kari at 15')[0]?.title).toBe('call Kari')
   })
 })
 
