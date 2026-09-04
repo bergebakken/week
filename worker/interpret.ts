@@ -64,21 +64,34 @@ function describe(context: Context, dayNames: string[]): string {
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
+/**
+ * Pulling a time out of one sentence is not deep work, and someone is waiting
+ * mid-sentence for the answer, so the small fast model is the right default.
+ * Override with: npx wrangler secret put MODEL
+ */
+export const DEFAULT_MODEL = 'claude-haiku-4-5'
+
+/** `output_config.effort` is rejected outright by Haiku 4.5 and Sonnet 4.5. */
+function takesEffort(model: string): boolean {
+  return /^claude-(opus-(5|4-[678])|sonnet-5|fable-)/.test(model)
+}
+
 export async function interpret(
   apiKey: string,
   lines: string[],
   context: Context,
+  model: string = DEFAULT_MODEL,
 ): Promise<Interpretation> {
   const client = new Anthropic({ apiKey })
 
   const response = await client.messages.parse({
-    model: 'claude-opus-5',
+    model,
     max_tokens: 4000,
     system: SYSTEM,
-    // A short extraction where the answer is waiting on someone mid-sentence:
-    // low effort is the right trade, and thinking stays on by default.
     output_config: {
-      effort: 'low',
+      // Low effort where the model understands it: a short extraction with
+      // someone waiting is not worth extra thinking.
+      ...(takesEffort(model) ? { effort: 'low' as const } : {}),
       format: zodOutputFormat(Interpretation),
     },
     messages: [

@@ -1,10 +1,12 @@
 import { mergePlans, migratePlan } from '../src/sync'
-import { interpret, type Context } from './interpret'
+import { DEFAULT_MODEL, interpret, type Context } from './interpret'
 
 export interface Env {
   WEEK: KVNamespace
   /** Set with: npx wrangler secret put ANTHROPIC_API_KEY */
   ANTHROPIC_API_KEY?: string
+  /** Optional override, e.g. claude-sonnet-5. Defaults to the small fast model. */
+  MODEL?: string
 }
 
 /**
@@ -87,7 +89,7 @@ export default {
       await env.WEEK.put(counter, String(used + 1), { expirationTtl: 172_800 })
 
       try {
-        const result = await interpret(env.ANTHROPIC_API_KEY, lines, body.context as Context)
+        const result = await interpret(env.ANTHROPIC_API_KEY, lines, body.context as Context, env.MODEL ?? DEFAULT_MODEL)
         return json(result, 200, origin)
       } catch (error) {
         return json({ error: error instanceof Error ? error.message : 'interpretation failed' }, 502, origin)

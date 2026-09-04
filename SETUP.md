@@ -117,11 +117,28 @@ never in the browser.
 
 The last line changes from `SKIP interpretation` to a placed block.
 
-## What it costs
+## Which model
 
-Claude Opus 5 at low effort, roughly 600 tokens in and 200 out per line, so
-about a **penny per line it has to read** — and only for lines the parser gave
-up on. A normal week is a handful.
+Claude Haiku 4.5 by default. Pulling a time out of one sentence is not deep
+work, and you are waiting mid-sentence for the answer, so speed is worth more
+here than reasoning depth.
+
+Cost barely enters into it. At roughly 600 tokens in and 200 out, ten lines a
+week comes to about **80p a year on Haiku against £4 on Opus** — both small
+enough to ignore. Latency is the real difference.
+
+To try another:
+
+    npx wrangler secret put MODEL      # e.g. claude-sonnet-5
+
+And to decide on evidence rather than opinion:
+
+    ANTHROPIC_API_KEY=sk-... npm run compare:models
+
+That runs the same awkward lines — "gym sometime after lunch", "squeeze in a
+run before dinner", and one line of nonsense that must *not* produce a block —
+through Haiku, Sonnet and Opus using the worker's real prompt, and prints what
+each placed and how long it took.
 
 The worker allows 100 interpretations per sync code per day. That cap exists
 because the sync code is the only lock: if it ever leaks, the worst case is
